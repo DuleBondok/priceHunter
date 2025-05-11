@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",  // Enable JSX for React
+    "moduleResolution": "node",  // Helps with module resolution
+    "strict": true,  // Enables strict type checking
+    "esModuleInterop": true,  // Enables compatibility for default imports
+    "skipLibCheck": true  // Skip library check for better performance
+  },
+  "include": [
+    "src/**/*"  // Make sure your source files are included
+  ]
+}
