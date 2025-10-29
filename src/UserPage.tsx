@@ -133,14 +133,21 @@ function UserPage() {
 
         <div className="searchResultsDiv">
           {searchResults.length === 0 && <p>No results yet.</p>}
-          {searchResults.map((standardizedProduct) => {
-            const prices = standardizedProduct.products.map((p) =>
-              parseFloat(p.price)
-            );
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-            const quantityValue = quantities[standardizedProduct.id] || 1;
+            {searchResults
+    // ✅ Filter out products with invalid prices
+    .filter((standardizedProduct) => {
+      const prices = standardizedProduct.products.map((p) => parseFloat(p.price));
+      // keep only if at least one price is a valid number
+      return prices.some((price) => !isNaN(price));
+    })
+    .map((standardizedProduct) => {
+      const prices = standardizedProduct.products
+        .map((p) => parseFloat(p.price))
+        .filter((p) => !isNaN(p)); // make sure no NaNs in calculation
 
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      const quantityValue = quantities[standardizedProduct.id] || 1;
             return (
               <div className="productCardDiv" key={standardizedProduct.id}>
                 <img

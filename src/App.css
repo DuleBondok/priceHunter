@@ -3,11 +3,17 @@
     padding: 0;
 }
 
+@font-face {
+    font-family: Poppins;
+    src: url(../public/fonts/Poppins.ttf);
+}
+
 .scrapingLogsDiv {
     height: 50vh;
     width: 70vw;
     border: 1px solid black;
     margin-left: 15vw;
+    overflow-y: scroll;
 }
 
 .scrapingButtonsDiv {
@@ -50,9 +56,153 @@
     cursor:pointer;
 }
 
-.homepageHeader {
+.mainHomepageDiv {
+
     width: 100%;
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+}
+
+.homepageLogo {
+    height: 13vh;
     text-align: center;
+}
+
+.headerLocationIcon {
+    height: 4vh;
+    background-color: #00544016;
+    border-radius: 8vh;
+    padding: 1vh;
+}
+
+.headerLocationIcon:hover {
+    cursor: pointer;
+    background-color: #00544059;
+}
+
+.headerFirstDiv {
+
+    width: 25vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2vw;
+    height: 13vh;
+}
+
+.headerSecondDiv {
+
+    width: 25vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2vw;
+    height: 13vh;
+}
+
+.headerLogInBtn {
+    height: 5vh;
+    font-family: Poppins;
+    font-size: 1.3rem;
+    outline: none;
+    border: none;
+    background-color: transparent;
+}
+
+.headerSignUpBtn {
+    height: 5vh;
+    font-family: Poppins;
+    font-size: 1.3rem;
+    border: none;
+    color: #005440;
+    padding: 1vh;
+    border-radius: 1vh;
+    background-color: #00544016;
+}
+
+.headerSignUpBtn:hover {
+    cursor: pointer;
+    background-color: #00544059;
+}
+
+.homepageHeaderDiv {
+    width: 100%;
+    height: 13vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 50vw;
+}
+
+.homepageDisplayDiv {
+    width: 100%;
+    height: 87vh;
+    background-image: url(../public/images/backgroundImg.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.selectPageDiv {
+    display: flex;
+    flex-direction: row;
+    gap: 5vw;
+}
+
+.adminImg {
+    width: 3vw;
+}
+
+.userImg {
+    width: 3vw;
+}
+
+.roleDiv {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 2vw;
+    display: none;
+}
+
+.roleHref {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5vw;
+    font-size: 2rem;
+    text-decoration: none;
+    background-color: antiquewhite;
+    padding: 1vh;
+    border-radius: 1vh;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.roleHref:hover {
+    cursor: pointer;
+    background-color: rgb(249, 229, 202);
 }
 
 
