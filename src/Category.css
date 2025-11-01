@@ -1,0 +1,206 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: Poppins;
+  src: url(../public/fonts/Poppins.ttf);
+}
+
+@font-face {
+  font-family: Inter;
+  src: url(../public/fonts/Inter.ttf);
+}
+@font-face {
+  font-family: Montserrat;
+  src: url(../public/fonts/Montserrat.ttf);
+}
+
+@font-face {
+  font-family: Radley;
+  src: url(../public/fonts/Radley.ttf);
+}
+
+@font-face {
+  font-family: SourGummy;
+  src: url(../public/fonts/SourGummy.ttf);
+}
+
+@font-face {
+  font-family: Lexend;
+  src: url(../public/fonts/Lexend.ttf);
+}
+
+.mainDairyDiv {
+  display: flex;
+  flex-direction: column;
+  height: 50vh;
+  padding-left: 10vh;
+  padding-top: 8vh;
+  gap: 3vh;
+  width: fit-content;
+}
+
+.dairyYourLocationDiv {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4vw;
+  font-size: 1.2rem;
+  font-family: Radley;
+  width: fit-content;
+}
+
+.dairyYourLocationParagraph {
+  color: #003d2f;
+  font-size: 1.2rem;
+  font-family: Radley;
+  width: fit-content;
+}
+
+.dairyHeader {
+  font-size: 2.8rem;
+  font-family: Radley;
+  letter-spacing: 0.1rem;
+  font-weight: 500;
+  color: #003d2f;
+  width: fit-content;
+  text-shadow: 1px 3px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dairyMidCatergoriesListDiv {
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  gap: 3vw;
+  margin-top: 4vh;
+}
+
+.dairyMidCategoryDiv {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(0, 179, 119, 0.3);
+  width: fit-content;
+  padding: 1vh;
+  border-radius: 2vh;
+  gap: 0.8vh;
+  background: linear-gradient(to bottom, #005c47 0%, #009966 50%, #00b377 100%);
+}
+
+.midCategoryIcon {
+  height: 8vh;
+}
+
+.midCategoryName {
+  font-family: SourGummy;
+  font-size: 1.3rem;
+  max-width: 7vw; /* set your desired width */
+  white-space: nowrap; /* keep text on one line */
+  overflow: hidden; /* hide overflow */
+  text-overflow: ellipsis;
+}
+
+.listSettingsDiv {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  gap: 2vw;
+}
+
+.downArrowIcon {
+  height: 3vh;
+}
+
+.sortByBtn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5vw;
+  padding-left: 1.4vh;
+  padding-right: 1.4vh;
+  padding-top: 0.4vh;
+  padding-bottom: 0.4vh;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 1.2rem;
+  border-radius: 1.6vh;
+  border: none;
+}
+
+.sortByBtn:hover {
+  cursor: pointer;
+  background-color: rgb(186, 186, 186);
+}
+
+.filtersBtn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5vw;
+  padding-left: 1.4vh;
+  padding-right: 1.4vh;
+  padding-top: 0.4vh;
+  padding-bottom: 0.4vh;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 1.2rem;
+  border-radius: 1.6vh;
+  border: none;
+}
+
+.filtersBtn:hover {
+  cursor: pointer;
+  background-color: rgb(186, 186, 186);
+}
+
+.starMedalIcon {
+  height: 3vh;
+}
+
+.bestOfferBtn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.1vw;
+  padding-left: 1.4vh;
+  padding-right: 1.4vh;
+  padding-top: 0.4vh;
+  padding-bottom: 0.4vh;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 1.2rem;
+  border-radius: 1.6vh;
+  border: none;
+}
+
+.bestOfferBtn:hover {
+  cursor: pointer;
+  background-color: rgb(186, 186, 186);
+}
+
+.allDairyHeader {
+    font-family: Lexend;
+    font-size: 1.8rem;
+    color: rgb(108, 108, 108);
+    margin-top: 5vh;
+}
+
+.productsDisplayDiv {
+  border: 1px solid black;
+  width: 90vw;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap; /* <-- add this */
+  height: fit-content;
+  gap: 1rem; /* optional, to add space between items */
+  background-color: rgb(186, 186, 186);
+}
+
