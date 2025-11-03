@@ -13,17 +13,21 @@ function SearchResults() {
   const { results: searchResults, loading, error } = useSearch(query);
 
   const {
-    quantities,
-    shoppingList,
-    showShoppingList,
-    setShowShoppingList,
-    handlePlusClick,
-    handleMinusClick,
-    handleAddToList,
-    handleRemoveFromList,
-    incrementShoppingListItem,
-    decrementShoppingListItem,
-  } = useShoppingList();
+  quantities,
+  shoppingList,
+  showShoppingList,
+  setShowShoppingList,
+  handlePlusClick,
+  handleMinusClick,
+  handleAddToList,
+  handleRemoveFromList,
+  incrementShoppingListItem,
+  decrementShoppingListItem,
+  shoppingStrategy,
+  handleStrategyChange,
+  startShopping,
+} = useShoppingList();
+
 
   return (
     <>
@@ -89,6 +93,40 @@ function SearchResults() {
                 ))}
               </ul>
             )}
+                     {/* Shopping Strategy UI */}
+            <div className="shoppingStrategySection">
+              <h3 className="strategyHeader">Izaberite strategiju kupovine</h3>
+
+              <div className="strategyOptionsDiv">
+                <label className="strategyOption">
+                  <input
+                    type="checkbox"
+                    className="strategyCheckbox"
+                    checked={shoppingStrategy === "money"}
+                    onChange={() => handleStrategyChange("money")}
+                  />
+                  <div className="strategyLabelContent">
+                    <span className="strategyText">Najbolje cene</span>
+                  </div>
+                </label>
+
+                <label className="strategyOption">
+                  <input
+                    type="checkbox"
+                    className="strategyCheckbox"
+                    checked={shoppingStrategy === "time"}
+                    onChange={() => handleStrategyChange("time")}
+                  />
+                  <div className="strategyLabelContent">
+                    <span className="strategyText">Najkraće vreme</span>
+                  </div>
+                </label>
+              </div>
+
+              <button className="startShoppingBtn" onClick={startShopping}>
+                Kreni u kupovinu
+              </button>
+            </div>
           </div>
         </div>
       )}
