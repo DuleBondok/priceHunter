@@ -13,6 +13,7 @@ export type StandardizedProduct = {
   id: string;
   name: string;
   brand: string;
+  volume: string;
   image?: string | null;
   products: Product[];
 };

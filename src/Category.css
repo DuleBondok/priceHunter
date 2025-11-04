@@ -90,6 +90,24 @@
   background: linear-gradient(to bottom, #005c47 0%, #009966 50%, #00b377 100%);
 }
 
+.dairyMidCategoryDiv.active {
+   background: #fffbea; /* soft yellowish highlight */
+  box-shadow: 0 0 6px rgba(255, 200, 0, 0.4);
+  transform: scale(1.02);
+  font-weight: 600;
+  scale: 1.1;
+}
+
+.dairyMidCategoryDiv:hover {
+  cursor: pointer;
+  background: linear-gradient(to bottom, #00b377 0%, #009966 50%, #005c47 100%);
+}
+
+.dairyMidCategoryDiv.active:hover {
+  cursor: pointer;
+  background: #fdf2c2;
+}
+
 .midCategoryIcon {
   height: 8vh;
 }
@@ -194,13 +212,80 @@
 }
 
 .productsDisplayDiv {
-  border: 1px solid black;
   width: 90vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap; /* <-- add this */
   height: fit-content;
-  gap: 1rem; /* optional, to add space between items */
-  background-color: rgb(186, 186, 186);
+  gap: 3vw; /* optional, to add space between items */
+
+  justify-content: center;
+}
+
+.dairySubCategoriesListDiv {
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  gap: 3vw;
+  margin-left: 2vw;
+}
+
+.selectedMidCategorySection {
+  display: flex;
+  flex-direction: row;
+}
+
+.dairySubCategoryDiv {
+    display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(0, 179, 119, 0.3);
+  width: fit-content;
+  padding: 1vh;
+  border-radius: 2vh;
+  gap: 0.8vh;
+  background: linear-gradient(to bottom, #005c47 0%, #009966 50%, #00b377 100%);
+}
+
+.subCategoryIcon {
+    height: 8vh;
+}
+
+.subCategoryName {
+    font-family: SourGummy;
+  font-size: 1.3rem;
+  max-width: 7vw; /* set your desired width */
+  white-space: nowrap; /* keep text on one line */
+  overflow: hidden; /* hide overflow */
+  text-overflow: ellipsis;
+
+}
+
+.backToMidCategoriesBtn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5vw;
+  padding-left: 1.4vh;
+  padding-right: 1.4vh;
+  padding-top: 0.4vh;
+  padding-bottom: 0.4vh;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 1.2rem;
+  border-radius: 1.6vh;
+  border: none;
+  background-color: #005c47;
+  color: white;
+}
+
+.backToMidCategoriesBtn:hover {
+  cursor: pointer;
+}
+
+.closeMidCategoryBtn {
+  height: 2vh;
 }
 
