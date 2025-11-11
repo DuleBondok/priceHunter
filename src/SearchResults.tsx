@@ -26,6 +26,9 @@ function SearchResults() {
   shoppingStrategy,
   handleStrategyChange,
   startShopping,
+  optimizedList,
+  showOptimizedList,
+  setShowOptimizedList,
 } = useShoppingList();
 
 
@@ -68,7 +71,40 @@ function SearchResults() {
 
             {shoppingList.length === 0 ? (
               <p>Lista je prazna.</p>
+            ) : showOptimizedList ? (
+              // Optimized List View
+              <div>
+                <button className="optimizedExitBtn" onClick={() => setShowOptimizedList(false)}>X</button>
+                <h2 className="optimizedHeader">Optimizovana lista za uštedu novca</h2>
+                <ul className="shoppingListSection">
+                  {optimizedList.map((item) => (
+                    <li className="shoppingListItem" key={item.product.id}>
+                      <img src={item.product.image ?? ""} className="shoppingListItemImage" />
+                      <div className="shoppingListItemDetailsDiv">
+                        <p className="shoppingListItemBrand">{item.product.brand}</p>
+                        <p className="shoppingListItemName">{item.product.name}</p>
+                        <p className="shoppingListItemStore">Prodavnica: {item.assignedStore}</p>
+                        <p className="shoppingListItemPrice">Cena: {item.assignedPrice.toFixed(2)} RSD</p>
+                      </div>
+                      <div className="shoppingListItemQuantityDiv">
+                        <p className="shoppingListItemQuantity">Količina: {item.quantity}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <p className="totalSavings">
+                  Ukupna ušteda: {(() => {
+                    // Original total: sum of prices from the first store for each item (baseline)
+                    const originalTotal = shoppingList.reduce((sum, item) =>
+                      sum + parseFloat(item.product.products[0].price) * item.quantity, 0);
+                    // Optimized total: sum of assigned prices (cheapest or from main store)
+                    const optimizedTotal = optimizedList.reduce((sum, item) => sum + item.assignedPrice * item.quantity, 0);
+                    return (originalTotal - optimizedTotal).toFixed(2);
+                  })()} RSD
+                </p>
+              </div>
             ) : (
+              // Original Shopping List View
               <ul className="shoppingListSection">
                 {shoppingList.map((item) => (
                   <li className="shoppingListItem" key={item.product.id}>
@@ -126,6 +162,8 @@ function SearchResults() {
               <button className="startShoppingBtn" onClick={startShopping}>
                 Kreni u kupovinu
               </button>
+
+              
             </div>
           </div>
         </div>
