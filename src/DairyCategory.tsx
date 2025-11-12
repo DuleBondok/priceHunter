@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CategoryHeader from "./CategoryHeader";
 import "./Category.css";
-import { useEffect } from "react";
 import ProductCard from "./ProductCard";
+import { motion, AnimatePresence } from "framer-motion";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 type StandardizedProduct = {
   id: string;
@@ -23,6 +25,7 @@ type StandardizedProduct = {
 
 function DairyCategory() {
   const [products, setProducts] = useState<StandardizedProduct[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedMidCategory, setSelectedMidCategory] = useState<string | null>(
@@ -33,48 +36,54 @@ function DairyCategory() {
   );
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const category = "Mlečni proizvodi i jaja";
-        const query = selectedMidCategory
-          ? `/${encodeURIComponent(category)}/${encodeURIComponent(
-              selectedMidCategory
-            )}`
-          : `/${encodeURIComponent(category)}`;
+  const fetchProducts = async () => {
+    setLoading(true);  // Start loader before fetching
+    try {
+      const category = "Mlecni proizvodi i jaja";
+      let query = `/${encodeURIComponent(category)}`;
+      if (selectedMidCategory)
+        query += `/${encodeURIComponent(selectedMidCategory)}`;
+      if (selectedSubCategory)
+        query += `/${encodeURIComponent(selectedSubCategory)}`;
 
-        const res = await fetch(`http://localhost:5000/api/products${query}`);
+      const res = await fetch(`http://localhost:5000/api/products${query}`);
 
-        if (!res.ok) {
-          const errData = await res.json();
-          setError(errData.message || "Failed to fetch products");
-          return;
-        }
-
-        const rawData = await res.json();
-
-        const transformedData: StandardizedProduct[] = rawData.map(
-          (product: any) => ({
-            ...product,
-            products: (product.products || []).map((p: any) => ({
-              id: p.id ?? `${product.id}-${p.store}`,
-              name: p.name ?? product.name,
-              brand: p.brand ?? product.brand,
-              price: String(p.price ?? "0"),
-              store: p.store,
-              image: p.image ?? product.image ?? null,
-            })),
-          })
-        );
-
-        setProducts(transformedData);
-      } catch (err) {
-        console.error("Failed to load products", err);
-        setError("Network error");
+      if (!res.ok) {
+        const errData = await res.json();
+        setError(errData.message || "Failed to fetch products");
+        setProducts([]); // Clear previous products if error
+        return;
       }
-    };
 
-    fetchProducts();
-  }, [selectedMidCategory]);
+      const rawData = await res.json();
+
+      const transformedData: StandardizedProduct[] = rawData.map(
+        (product: any) => ({
+          ...product,
+          products: (product.products || []).map((p: any) => ({
+            id: p.id ?? `${product.id}-${p.store}`,
+            name: p.name ?? product.name,
+            brand: p.brand ?? product.brand,
+            price: String(p.price ?? "0"),
+            store: p.store,
+            image: p.image ?? product.image ?? null,
+          })),
+        })
+      );
+
+      setProducts(transformedData);
+      setError(""); // Clear error on success
+    } catch (err) {
+      console.error("Failed to load products", err);
+      setError("Network error");
+      setProducts([]); // Clear products on error
+    } finally {
+      setLoading(false); // Stop loader after fetch (success or error)
+    }
+  };
+
+  fetchProducts();
+}, [selectedMidCategory, selectedSubCategory]);
 
   const onPlus = (id: string) => {
     setQuantities((prev) => ({
@@ -96,39 +105,40 @@ function DairyCategory() {
         product.name
       } u listu.`
     );
-    // Here you can implement your add to cart or list logic
+    // Add to cart or list logic can be implemented here
   };
+
   const categories = [
     {
       name: "Mleko",
       icon: "./images/milkIcon.png",
       subCategories: [
         { name: "Dugotrajno mleko", icon: "./images/mojaKravica.png" },
-        { name: "Sveže mleko", icon: "./images/freshMilk.png" },
-        { name: "Biljno Mleko", icon: "./images/veganMilk.png" },
-        { name: "Čokoladno mleko", icon: "./images/chocolateMilk.png" },
-        { name: "Napici i milkšejkovi", icon: "./images/milkShake.png" },
+        { name: "Sveze mleko", icon: "./images/freshMilk.png" },
+        { name: "Biljna Mleka", icon: "./images/veganMilk.png" },
+        { name: "Cokoladno mleko", icon: "./images/chocolateMilk.png" },
+        { name: "Napici i milksejkovi", icon: "./images/milkShake.png" },
       ],
     },
     {
       name: "Jaja",
       icon: "./images/eggIcon.png",
       subCategories: [
-        { name: "Kokošija jaja", icon: "./images/chickenIcon.png" },
-        { name: "Prepeličja jaja", icon: "./images/quailIcon.png" },
+        { name: "Kokosija jaja", icon: "./images/chickenIcon.png" },
+        { name: "Prepelicja jaja", icon: "./images/quailIcon.png" },
       ],
     },
     {
-      name: "Kiselo-mlečni proizvodi",
+      name: "Kiselo-mlecni proizvodi",
       icon: "./images/yogurtIcon.png",
       subCategories: [
         { name: "Jogurt", icon: "./images/jogurt.png" },
         { name: "Pavlaka", icon: "./images/pavlaka.png" },
         { name: "Kiselo mleko", icon: "./images/kiseloMleko.png" },
         { name: "Kefir", icon: "./images/kefir.png" },
-        { name: "Grčki jogurt", icon: "./images/greekYogurt.png" },
+        { name: "Grcki jogurt", icon: "./images/greekYogurt.png" },
         { name: "Surutka", icon: "./images/surutka.png" },
-        { name: "Voćni jogurt", icon: "./images/fruitYogurt.png" },
+        { name: "Vocni jogurt", icon: "./images/fruitYogurt.png" },
       ],
     },
     {
@@ -155,9 +165,7 @@ function DairyCategory() {
     {
       name: "Maslac",
       icon: "./images/butterIcon.png",
-      subCategories: [
-        
-      ],
+      subCategories: [],
     },
     {
       name: "Margarin",
@@ -181,11 +189,12 @@ function DairyCategory() {
       subCategories: [
         { name: "Puding", icon: "./images/pudding.png" },
         { name: "Protein puding", icon: "./images/proteinPuding.png" },
-        { name: "Sutlijaš", icon: "./images/sutlijas.png" },
-        { name: "Mlečni deserti", icon: "./images/chocolateBar.png" },
+        { name: "Sutlijas", icon: "./images/sutlijas.png" },
+        { name: "Mlecni deserti", icon: "./images/chocolateBar.png" },
       ],
     },
   ];
+
   return (
     <>
       <CategoryHeader />
@@ -198,121 +207,253 @@ function DairyCategory() {
               &gt; {selectedMidCategory}
             </p>
           )}
-        </div>
-        <h1 className="dairyHeader">
-          {selectedMidCategory || "Mlečni proizvodi i jaja"}
-        </h1>
-        <div className="dairyMidCatergoriesListDiv">
-          {/* Show all midCategories if none selected */}
-          {!selectedMidCategory &&
-            categories.map((cat) => (
-              <div
-                key={cat.name}
-                className={`dairyMidCategoryDiv ${
-                  selectedMidCategory === cat.name ? "active" : ""
-                }`}
-                onClick={() => setSelectedMidCategory(cat.name)}
-              >
-                <img
-                  className="midCategoryIcon"
-                  src={cat.icon}
-                  alt={cat.name}
-                />
-                <p className="midCategoryName">{cat.name}</p>
-              </div>
-            ))}
-
-          {/* If midCategory is selected, show that category + its subcategories */}
-          {selectedMidCategory && (
-            <div className="selectedMidCategorySection">
-              <div
-                className="dairyMidCategoryDiv active"
-                onClick={() => setSelectedMidCategory(null)}
-              >
-                <img
-                  className="midCategoryIcon"
-                  src={
-                    categories.find((cat) => cat.name === selectedMidCategory)
-                      ?.icon ?? "./images/defaultIcon.png"
-                  }
-                  alt={selectedMidCategory}
-                />
-                <p className="midCategoryName">{selectedMidCategory}</p>
-              </div>
-
-              <div className="dairySubCategoriesListDiv">
-                {categories
-                  .find((cat) => cat.name === selectedMidCategory)
-                  ?.subCategories.map((sub) => (
-                    <div
-                      key={sub.name}
-                      className={`dairySubCategoryDiv ${
-                        selectedSubCategory === sub.name ? "active" : ""
-                      }`}
-                      onClick={() => setSelectedSubCategory(sub.name)}
-                    >
-                      <img
-                        className="subCategoryIcon"
-                        src={sub.icon}
-                        alt={sub.name}
-                      />
-                      <p className="subCategoryName">{sub.name}</p>
-                    </div>
-                  ))}
-              </div>
-            </div>
+          {selectedSubCategory && (
+            <p className="dairySubCategoryParagraph">
+              &gt; {selectedSubCategory}
+            </p>
           )}
         </div>
+        <h1 className="dairyHeader">
+          {selectedSubCategory ||
+            selectedMidCategory ||
+            "Mlečni proizvodi i jaja"}
+        </h1>
+
+        {/* Categories List */}
+        <div className="dairyMidCategoriesListDiv">
+          {/* Show mid categories when none selected */}
+          {!selectedMidCategory && (
+            <motion.div
+              className="midCategoriesContainer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              layout
+              style={{ display: "flex", flexWrap: "nowrap", gap: "3vw" }}
+            >
+              {categories.map((cat) => (
+                <motion.div
+                  key={cat.name}
+                  className={`dairyMidCategoryDiv ${
+                    selectedMidCategory === cat.name ? "active" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedMidCategory(cat.name);
+                    setSelectedSubCategory(null);
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.05 }}
+                  layout
+                >
+                  <img
+                    className="midCategoryIcon"
+                    src={cat.icon}
+                    alt={cat.name}
+                  />
+                  <p className="midCategoryName">{cat.name}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Show selected mid category and its subcategories */}
+          <AnimatePresence mode="wait">
+            {selectedMidCategory && (
+              <motion.div
+                key="selectedMidCategorySection"
+                className="selectedMidCategorySection"
+                initial={{ opacity: 0, x: 30, scale: 0.95 }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  scale: 1,
+                  transition: { type: "spring", stiffness: 300, damping: 30 },
+                }}
+                exit={{
+                  opacity: 0,
+                  x: 30,
+                  scale: 0.8,
+                  transition: { duration: 0.3 },
+                }}
+                layout
+              >
+                <motion.div
+                  className="dairyMidCategoryDiv active"
+                  onClick={() => {
+                    setSelectedMidCategory(null);
+                    setSelectedSubCategory(null);
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  layout
+                >
+                  <img
+                    className="midCategoryIcon"
+                    src={
+                      categories.find((cat) => cat.name === selectedMidCategory)
+                        ?.icon ?? "./images/defaultIcon.png"
+                    }
+                    alt={selectedMidCategory}
+                  />
+                  <p className="midCategoryName">{selectedMidCategory}</p>
+                </motion.div>
+
+                <motion.div
+                  className="dairySubCategoriesListDiv"
+                  initial="hidden"
+                  animate="visible"
+                  exit={{
+                    opacity: 0,
+                    y: 10,
+                    transition: {
+                      staggerChildren: 0.05,
+                      staggerDirection: -1,
+                    },
+                  }}
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: {
+                        staggerChildren: 0.1,
+                        when: "beforeChildren",
+                      },
+                    },
+                  }}
+                  layout
+                >
+                  {categories
+                    .find((cat) => cat.name === selectedMidCategory)
+                    ?.subCategories.map((sub) => (
+                      <motion.div
+                        key={sub.name}
+                        className={`dairySubCategoryDiv ${
+                          selectedSubCategory === sub.name ? "active" : ""
+                        }`}
+                        onClick={() =>
+                          setSelectedSubCategory(
+                            selectedSubCategory === sub.name ? null : sub.name
+                          )
+                        }
+                        variants={{
+                          hidden: { opacity: 0, y: 10 },
+                          visible: { opacity: 1, y: 0 },
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.05 }}
+                        layout
+                      >
+                        <img
+                          className="subCategoryIcon"
+                          src={sub.icon}
+                          alt={sub.name}
+                        />
+                        <p className="subCategoryName">{sub.name}</p>
+                      </motion.div>
+                    ))}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        
         <div className="listSettingsDiv">
           <button className="sortByBtn">
             Sortiraj po{" "}
-            <img
-              src="./images/downArrowIcon.png"
-              className="downArrowIcon"
-            ></img>
+            <img src="./images/downArrowIcon.png" className="downArrowIcon" />
           </button>
 
           <button className="filtersBtn">
             Filteri
-            <img
-              src="./images/downArrowIcon.png"
-              className="downArrowIcon"
-            ></img>
+            <img src="./images/downArrowIcon.png" className="downArrowIcon" />
           </button>
+
           <button className="bestOfferBtn">
-            <img
-              src="./images/starMedalIcon.png"
-              className="starMedalIcon"
-            ></img>
+            <img src="./images/starMedalIcon.png" className="starMedalIcon" />
             Najpovoljnije
           </button>
+
           {selectedMidCategory && (
-            <button
-              className="backToMidCategoriesBtn"
-              onClick={() => setSelectedMidCategory(null)}
-            >
-              {selectedMidCategory}
-              <img
-                src="./images/close.png"
-                className="closeMidCategoryBtn"
-              ></img>
-            </button>
+            <>
+              
+              <button
+                className="backToMidCategoriesBtn"
+                onClick={() => setSelectedMidCategory(null)}
+              >
+                {selectedMidCategory}
+                <img
+                  src="./images/close.png"
+                  className="closeMidCategoryBtn"
+                  alt="Close"
+                />
+              </button>
+
+              
+              {selectedSubCategory && (
+                <button
+                  className="backToMidCategoriesBtn"
+                  onClick={() => setSelectedSubCategory(null)}
+                >
+                  {selectedSubCategory}
+                  <img
+                    src="./images/close.png"
+                    className="closeMidCategoryBtn"
+                    alt="Close"
+                  />
+                </button>
+              )}
+            </>
           )}
         </div>
-        <h3 className="allDairyHeader">Svi proizvodi ({products.length})</h3>
-        <div className="productsDisplayDiv">
-          {error && <p style={{ color: "red" }}>{error}</p>}
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              quantity={quantities[product.id] || 1}
-              onPlus={() => onPlus(product.id)}
-              onMinus={() => onMinus(product.id)}
-              onAddToList={() => onAddToList(product)}
-            />
-          ))}
+
+<h3 className="allDairyHeader">
+  {loading ? <Skeleton width={240} /> : `Svi proizvodi (${products.length})`}
+</h3>
+
+<div className="productsDisplayDiv">
+  {error && <p style={{ color: "red" }}>{error}</p>}
+
+  {loading
+    ? Array(6).fill(0).map((_, idx) => (
+        <div key={idx} className="productCardDiv" style={{ pointerEvents: "none" }}>
+          {/* Skeleton layout here as I detailed previously */}
+          <Skeleton
+  height="15vh"
+  width="12vw"
+  borderRadius="2vh"
+  style={{ marginTop: "1vh", marginBottom: "1vh", marginLeft: "auto", marginRight: "auto", backgroundColor: "#fff" }}
+/>
+          <div className="storeLogosDiv" style={{ justifyContent: "flex-start", gap: "1.2vw", marginTop: "1.5vh", width: "12.2vw" }}>
+            {[...Array(3)].map((__, i) => (
+              <Skeleton key={i} height="2vh" width="2vw" style={{ marginRight: "1vw", borderRadius: "1vh" }} />
+            ))}
+          </div>
+          <Skeleton width="12.3vw" height="5vh" style={{ marginTop: "1vh" }} />
+          <div className="productWeightDiv" style={{ width: "12.8vw", marginTop: "0.5vh" }}>
+            <Skeleton width="3vw" height="1.8vh" />
+            <Skeleton width="7vw" height="1.8vh" style={{ marginLeft: "0.5vw" }} />
+          </div>
+          <Skeleton width="12.3vw" height="2vh" style={{ marginTop: "1vh" }} />
+          <div className="productQuantityDiv" style={{ display: "flex", justifyContent: "space-between", width: "12.3vw", marginTop: "1vh" }}>
+            <Skeleton width="3vw" height="3vh" borderRadius="1vh" />
+            <Skeleton width="2vw" height="3vh" />
+            <Skeleton width="3vw" height="3vh" borderRadius="1vh" />
+          </div>
+          <Skeleton width="12.3vw" height="4vh" borderRadius="2vh" style={{ marginTop: "1vh" }} />
         </div>
+      ))
+    : products.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          quantity={quantities[product.id] || 1}
+          onPlus={() => onPlus(product.id)}
+          onMinus={() => onMinus(product.id)}
+          onAddToList={() => onAddToList(product)}
+        />
+      ))}
+</div>
       </div>
     </>
   );
