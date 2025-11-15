@@ -398,3 +398,113 @@
   max-height: 90vh;
   overflow-y: auto;
 }
+
+.matchResults {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5vh;
+}
+
+.matchCard {
+  border: 2px solid #003d2f;
+  display: flex;
+  flex-direction: row;
+  height: 30vh;
+  border-radius: 2vh;
+  
+}
+
+.scrapedProductDiv {
+  border-right: 1px solid rgba(0, 0, 0, 0.303);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 13vw;
+  position: relative;
+  
+}
+
+.standardizedProductDiv {
+  border-right: 1px solid rgba(0, 0, 0, 0.303);
+    display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 13vw;
+  position: relative;
+  
+}
+
+.scrapedProductImage {
+  height: 15vh;
+}
+
+.standardizedProductParagraph {
+  font-size: 1rem;
+  font-family: Lexend;
+  font-weight: 500;
+  text-align: center;
+  height: 20vh;
+}
+
+.scrapedProductParagraph {
+    font-size: 1rem;
+  font-family: Lexend;
+  font-weight: 500;
+  text-align: center;
+  height: 20vh;
+}
+
+.standardizedProductImage {
+  height: 15vh;
+}
+
+.standardizedProductText {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin-left: 0.5vw;
+  font-size: 0.6rem;
+  color: red;
+  font-family: SourGummy;
+}
+
+.scrapedProductText {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  font-size: 0.6rem;
+  color: red;
+  font-family: SourGummy;
+}
+
+.similarityDiv {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2vh;
+  border-right: 1px solid rgba(0, 0, 0, 0.303);
+}
+
+.similarityValue {
+  color: #003d2f;
+  font-size: 2rem;
+}
+
+.confirmSimilarityBtn {
+  height: 8vh;
+  width: 10vw;
+  margin-top: 11vh;
+  margin-right: 2vw;
+  margin-left: 2vw;
+  font-size: 1.5rem;
+  font-family: Montserrat;
+  color: #009966;
+}
+
+.confirmSimilarityBtn:hover {
+cursor: pointer;}
