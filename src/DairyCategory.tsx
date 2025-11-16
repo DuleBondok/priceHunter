@@ -5,6 +5,7 @@ import ProductCard from "./ProductCard";
 import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import Modal from "./DisplayModal";
 
 type StandardizedProduct = {
   id: string;
@@ -35,55 +36,59 @@ function DairyCategory() {
     null
   );
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   useEffect(() => {
-  const fetchProducts = async () => {
-    setLoading(true);  // Start loader before fetching
-    try {
-      const category = "Mlecni proizvodi i jaja";
-      let query = `/${encodeURIComponent(category)}`;
-      if (selectedMidCategory)
-        query += `/${encodeURIComponent(selectedMidCategory)}`;
-      if (selectedSubCategory)
-        query += `/${encodeURIComponent(selectedSubCategory)}`;
+    const fetchProducts = async () => {
+      setLoading(true); // Start loader before fetching
+      try {
+        const category = "Mlecni proizvodi i jaja";
+        let query = `/${encodeURIComponent(category)}`;
+        if (selectedMidCategory)
+          query += `/${encodeURIComponent(selectedMidCategory)}`;
+        if (selectedSubCategory)
+          query += `/${encodeURIComponent(selectedSubCategory)}`;
 
-      const res = await fetch(`http://localhost:5000/api/products${query}`);
+        const res = await fetch(`http://localhost:5000/api/products${query}`);
 
-      if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.message || "Failed to fetch products");
-        setProducts([]); // Clear previous products if error
-        return;
+        if (!res.ok) {
+          const errData = await res.json();
+          setError(errData.message || "Failed to fetch products");
+          setProducts([]); // Clear previous products if error
+          return;
+        }
+
+        const rawData = await res.json();
+
+        const transformedData: StandardizedProduct[] = rawData.map(
+          (product: any) => ({
+            ...product,
+            products: (product.products || []).map((p: any) => ({
+              id: p.id ?? `${product.id}-${p.store}`,
+              name: p.name ?? product.name,
+              brand: p.brand ?? product.brand,
+              price: String(p.price ?? "0"),
+              store: p.store,
+              image: p.image ?? product.image ?? null,
+            })),
+          })
+        );
+
+        setProducts(transformedData);
+        setError(""); // Clear error on success
+      } catch (err) {
+        console.error("Failed to load products", err);
+        setError("Network error");
+        setProducts([]); // Clear products on error
+      } finally {
+        setLoading(false); // Stop loader after fetch (success or error)
       }
+    };
 
-      const rawData = await res.json();
-
-      const transformedData: StandardizedProduct[] = rawData.map(
-        (product: any) => ({
-          ...product,
-          products: (product.products || []).map((p: any) => ({
-            id: p.id ?? `${product.id}-${p.store}`,
-            name: p.name ?? product.name,
-            brand: p.brand ?? product.brand,
-            price: String(p.price ?? "0"),
-            store: p.store,
-            image: p.image ?? product.image ?? null,
-          })),
-        })
-      );
-
-      setProducts(transformedData);
-      setError(""); // Clear error on success
-    } catch (err) {
-      console.error("Failed to load products", err);
-      setError("Network error");
-      setProducts([]); // Clear products on error
-    } finally {
-      setLoading(false); // Stop loader after fetch (success or error)
-    }
-  };
-
-  fetchProducts();
-}, [selectedMidCategory, selectedSubCategory]);
+    fetchProducts();
+  }, [selectedMidCategory, selectedSubCategory]);
 
   const onPlus = (id: string) => {
     setQuantities((prev) => ({
@@ -198,6 +203,7 @@ function DairyCategory() {
   return (
     <>
       <CategoryHeader />
+
       <div className="mainDairyDiv">
         <div className="dairyYourLocationDiv">
           <p className="dairyYourLocationParagraph">Tvoja lokacija &gt;</p>
@@ -357,12 +363,73 @@ function DairyCategory() {
           </AnimatePresence>
         </div>
 
-        
         <div className="listSettingsDiv">
-          <button className="sortByBtn">
+          <button className="sortByBtn" onClick={openModal}>
             Sortiraj po{" "}
             <img src="./images/downArrowIcon.png" className="downArrowIcon" />
           </button>
+          
+            <Modal isOpen={isModalOpen} onClose={closeModal}>
+              <div className="sortModal">
+                <div className="sortHeaderDiv">
+                    <h3 className="sortingHeader">Sortiraj po</h3>
+                    <button className="closeSortBtn" onClick={closeModal}>x</button>
+                </div>
+                
+                <div className="sortSecondHeader">
+                  <div className="sortByPriceDiv">
+                    <img src="./images/downSort.png" className="sortImg"></img>
+                    <p className="sortByParagraph">Cena (prvo najjeftinije)</p>
+                    <label className="checkBoxLabel">
+                      <input name="dummy" type="checkbox"></input>
+                      <span className="checkBoxSpan"></span>
+                    </label>
+                  </div>
+
+                  <div className="sortByPriceDiv">
+                    <img src="./images/upSort.png" className="sortImg"></img>
+                    <p className="sortByParagraph">Cena (prvo najskuplje)</p>
+                    <label className="checkBoxLabel">
+                      <input name="dummy" type="checkbox"></input>
+                      <span className="checkBoxSpan"></span>
+                    </label>
+                  </div>
+                  <div className="sortByPriceDiv">
+                    <img src="./images/discountIcon.png" className="sortImg"></img>
+                    <p className="sortByParagraph">Najveci popust</p>
+                    <label className="checkBoxLabel">
+                      <input name="dummy" type="checkbox"></input>
+                      <span className="checkBoxSpan"></span>
+                    </label>
+                  </div>
+                   <div className="sortByPriceDiv">
+                    <img src="./images/starMedalIcon.png" className="sortImg"></img>
+                    <p className="sortByParagraph">Najpovoljnije</p>
+                    <label className="checkBoxLabel">
+                      <input name="dummy" type="checkbox"></input>
+                      <span className="checkBoxSpan"></span>
+                    </label>
+                  </div>
+                   <div className="sortByPriceDiv">
+                    <img src="./images/newIcon.png" className="sortImg"></img>
+                    <p className="sortByParagraph">Novi proizvodi</p>
+                    <label className="checkBoxLabel">
+                      <input name="dummy" type="checkbox"></input>
+                      <span className="checkBoxSpan"></span>
+                    </label>
+                  </div>
+                   <div className="sortByPriceDiv">
+                    <img src="./images/flameIcon.png" className="sortImg"></img>
+                    <p className="sortByParagraph">Najpopulariniji proizvodi</p>
+                    <label className="checkBoxLabel">
+                      <input name="dummy" type="checkbox"></input>
+                      <span className="checkBoxSpan"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </Modal>
+          
 
           <button className="filtersBtn">
             Filteri
@@ -376,7 +443,6 @@ function DairyCategory() {
 
           {selectedMidCategory && (
             <>
-              
               <button
                 className="backToMidCategoriesBtn"
                 onClick={() => setSelectedMidCategory(null)}
@@ -389,7 +455,6 @@ function DairyCategory() {
                 />
               </button>
 
-              
               {selectedSubCategory && (
                 <button
                   className="backToMidCategoriesBtn"
@@ -407,53 +472,110 @@ function DairyCategory() {
           )}
         </div>
 
-<h3 className="allDairyHeader">
-  {loading ? <Skeleton width={240} /> : `Svi proizvodi (${products.length})`}
-</h3>
+        <h3 className="allDairyHeader">
+          {loading ? (
+            <Skeleton width={240} />
+          ) : (
+            `Svi proizvodi (${products.length})`
+          )}
+        </h3>
 
-<div className="productsDisplayDiv">
-  {error && <p style={{ color: "red" }}>{error}</p>}
+        <div className="productsDisplayDiv">
+          {error && <p style={{ color: "red" }}>{error}</p>}
 
-  {loading
-    ? Array(6).fill(0).map((_, idx) => (
-        <div key={idx} className="productCardDiv" style={{ pointerEvents: "none" }}>
-          {/* Skeleton layout here as I detailed previously */}
-          <Skeleton
-  height="15vh"
-  width="12vw"
-  borderRadius="2vh"
-  style={{ marginTop: "1vh", marginBottom: "1vh", marginLeft: "auto", marginRight: "auto", backgroundColor: "#fff" }}
-/>
-          <div className="storeLogosDiv" style={{ justifyContent: "flex-start", gap: "1.2vw", marginTop: "1.5vh", width: "12.2vw" }}>
-            {[...Array(3)].map((__, i) => (
-              <Skeleton key={i} height="2vh" width="2vw" style={{ marginRight: "1vw", borderRadius: "1vh" }} />
-            ))}
-          </div>
-          <Skeleton width="12.3vw" height="5vh" style={{ marginTop: "1vh" }} />
-          <div className="productWeightDiv" style={{ width: "12.8vw", marginTop: "0.5vh" }}>
-            <Skeleton width="3vw" height="1.8vh" />
-            <Skeleton width="7vw" height="1.8vh" style={{ marginLeft: "0.5vw" }} />
-          </div>
-          <Skeleton width="12.3vw" height="2vh" style={{ marginTop: "1vh" }} />
-          <div className="productQuantityDiv" style={{ display: "flex", justifyContent: "space-between", width: "12.3vw", marginTop: "1vh" }}>
-            <Skeleton width="3vw" height="3vh" borderRadius="1vh" />
-            <Skeleton width="2vw" height="3vh" />
-            <Skeleton width="3vw" height="3vh" borderRadius="1vh" />
-          </div>
-          <Skeleton width="12.3vw" height="4vh" borderRadius="2vh" style={{ marginTop: "1vh" }} />
+          {loading
+            ? Array(6)
+                .fill(0)
+                .map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="productCardDiv"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {/* Skeleton layout here as I detailed previously */}
+                    <Skeleton
+                      height="15vh"
+                      width="12vw"
+                      borderRadius="2vh"
+                      style={{
+                        marginTop: "1vh",
+                        marginBottom: "1vh",
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        backgroundColor: "#fff",
+                      }}
+                    />
+                    <div
+                      className="storeLogosDiv"
+                      style={{
+                        justifyContent: "flex-start",
+                        gap: "1.2vw",
+                        marginTop: "1.5vh",
+                        width: "12.2vw",
+                      }}
+                    >
+                      {[...Array(3)].map((__, i) => (
+                        <Skeleton
+                          key={i}
+                          height="2vh"
+                          width="2vw"
+                          style={{ marginRight: "1vw", borderRadius: "1vh" }}
+                        />
+                      ))}
+                    </div>
+                    <Skeleton
+                      width="12.3vw"
+                      height="5vh"
+                      style={{ marginTop: "1vh" }}
+                    />
+                    <div
+                      className="productWeightDiv"
+                      style={{ width: "12.8vw", marginTop: "0.5vh" }}
+                    >
+                      <Skeleton width="3vw" height="1.8vh" />
+                      <Skeleton
+                        width="7vw"
+                        height="1.8vh"
+                        style={{ marginLeft: "0.5vw" }}
+                      />
+                    </div>
+                    <Skeleton
+                      width="12.3vw"
+                      height="2vh"
+                      style={{ marginTop: "1vh" }}
+                    />
+                    <div
+                      className="productQuantityDiv"
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        width: "12.3vw",
+                        marginTop: "1vh",
+                      }}
+                    >
+                      <Skeleton width="3vw" height="3vh" borderRadius="1vh" />
+                      <Skeleton width="2vw" height="3vh" />
+                      <Skeleton width="3vw" height="3vh" borderRadius="1vh" />
+                    </div>
+                    <Skeleton
+                      width="12.3vw"
+                      height="4vh"
+                      borderRadius="2vh"
+                      style={{ marginTop: "1vh" }}
+                    />
+                  </div>
+                ))
+            : products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  quantity={quantities[product.id] || 1}
+                  onPlus={() => onPlus(product.id)}
+                  onMinus={() => onMinus(product.id)}
+                  onAddToList={() => onAddToList(product)}
+                />
+              ))}
         </div>
-      ))
-    : products.map((product) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          quantity={quantities[product.id] || 1}
-          onPlus={() => onPlus(product.id)}
-          onMinus={() => onMinus(product.id)}
-          onAddToList={() => onAddToList(product)}
-        />
-      ))}
-</div>
       </div>
     </>
   );
