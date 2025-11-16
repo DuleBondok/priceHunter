@@ -31,6 +31,10 @@
   font-family: Lexend;
   src: url(../public/fonts/Lexend.ttf);
 }
+@font-face {
+    font-family: Montserrat-Bold;
+    src: url(../public/fonts/Montserrat-Bold.ttf);
+}
 
 .mainDairyDiv {
   display: flex;
@@ -386,8 +390,28 @@
   background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
+  inset: 0;
   align-items: center;
   z-index: 1000;
+  animation-fill-mode: forwards;
+}
+
+.modalOverlay.show {
+  animation: overlayFadeIn 0.3s ease forwards;
+}
+
+.modalOverlay.hide {
+  animation: overlayFadeOut 0.3s ease forwards;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes overlayFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .modalContent {
@@ -397,114 +421,158 @@
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
+    transform: scale(0.7);
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+.modalContent.show {
+  animation: modalShow 0.3s ease forwards;
 }
 
-.matchResults {
+/* Close animation */
+.modalContent.hide {
+  animation: modalHide 0.3s ease forwards;
+}
+
+@keyframes modalShow {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalHide {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+.sortModal {
+  width: 30vw;
+  height: 55vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 5vh;
+  padding: 2vh;
 }
 
-.matchCard {
-  border: 2px solid #003d2f;
+.sortingHeader {
+  font-family: Montserrat-Bold;
+  font-size: 1.6rem;
+}
+
+.sortByPriceDiv {
   display: flex;
   flex-direction: row;
-  height: 30vh;
-  border-radius: 2vh;
-  
-}
-
-.scrapedProductDiv {
-  border-right: 1px solid rgba(0, 0, 0, 0.303);
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 13vw;
   position: relative;
-  
+  height: 6vh;
 }
-
-.standardizedProductDiv {
-  border-right: 1px solid rgba(0, 0, 0, 0.303);
-    display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 13vw;
-  position: relative;
-  
-}
-
-.scrapedProductImage {
-  height: 15vh;
-}
-
-.standardizedProductParagraph {
-  font-size: 1rem;
-  font-family: Lexend;
+.sortByParagraph {
+  font-family: SourGummy;
+  font-size: 1.4rem;
   font-weight: 500;
-  text-align: center;
-  height: 20vh;
-}
-
-.scrapedProductParagraph {
-    font-size: 1rem;
-  font-family: Lexend;
-  font-weight: 500;
-  text-align: center;
-  height: 20vh;
-}
-
-.standardizedProductImage {
-  height: 15vh;
-}
-
-.standardizedProductText {
-  position: absolute;
-  bottom: 0;
-  left: 0;
   margin-left: 0.5vw;
-  font-size: 0.6rem;
-  color: red;
-  font-family: SourGummy;
 }
 
-.scrapedProductText {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  font-size: 0.6rem;
-  color: red;
-  font-family: SourGummy;
-}
 
-.similarityDiv {
+
+
+.sortSecondHeader {
   display: flex;
   flex-direction: column;
+  gap: 2vh;
+  margin-top: 4vh;
+}
+
+.sortImg {
+  height: 3vh;
+}
+
+
+/* sorting checkbox design: */ 
+
+.checkBoxLabel {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 16px;
+  color: #333;
+  transition: color 0.3s;
+  position: absolute;
+  right: 0;
+  margin-right: 1vw;
+}
+
+.checkBoxLabel input[type="checkbox"] {
+  display: none;
+}
+
+.checkBoxLabel .checkBoxSpan {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #333;
+  border-radius: 4px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2vh;
-  border-right: 1px solid rgba(0, 0, 0, 0.303);
+  margin-right: 10px;
+  transition: background-color 0.3s, border-color 0.3s, transform 0.3s;
+  transform-style: preserve-3d;
 }
 
-.similarityValue {
-  color: #003d2f;
-  font-size: 2rem;
+.checkBoxLabel .checkBoxSpan::before {
+  content: "\2713";
+  font-size: 16px;
+  color: transparent;
+  transition: color 0.3s, transform 0.3s;
 }
 
-.confirmSimilarityBtn {
-  height: 8vh;
-  width: 10vw;
-  margin-top: 11vh;
-  margin-right: 2vw;
-  margin-left: 2vw;
-  font-size: 1.5rem;
-  font-family: Montserrat;
-  color: #009966;
+.checkBoxLabel input[type="checkbox"]:checked + .checkBoxSpan {
+  background-color: #009966;
+  border-color: #009966;
+  transform: scale(1.1) rotateZ(360deg) rotateY(360deg);
 }
 
-.confirmSimilarityBtn:hover {
-cursor: pointer;}
+.checkBoxLabel input[type="checkbox"]:checked + .checkBoxSpan::before {
+  color: #fff;
+}
+
+.checkBoxLabel:hover {
+  color: #666;
+}
+
+.checkBoxLabel:hover .checkBoxSpan {
+  border-color: #666;
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.checkBoxLabel input[type="checkbox"]:focus + .checkBoxSpan {
+  box-shadow: 0 0 3px 2px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+.checkBoxLabel .checkBoxSpan,
+.checkBoxLabel input[type="checkbox"]:checked + .checkBoxSpan {
+  transition: background-color 1.3s, border-color 1.3s, color 1.3s, transform 0.3s;
+}
+
+.sortHeaderDiv {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid black;
+  justify-content: center;
+  align-items: center;
+  gap: 20vw;
+
+}
