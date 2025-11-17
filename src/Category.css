@@ -9,6 +9,11 @@
 }
 
 @font-face {
+    font-family: Montserrat-Bold;
+    src: url(../public/fonts/Montserrat-Bold.ttf);
+}
+
+@font-face {
   font-family: Inter;
   src: url(../public/fonts/Inter.ttf);
 }
@@ -458,15 +463,17 @@
 
 .sortModal {
   width: 30vw;
-  height: 55vh;
+  height: 65vh;
   display: flex;
   flex-direction: column;
   padding: 2vh;
+  justify-content: center;
 }
 
 .sortingHeader {
   font-family: Montserrat-Bold;
   font-size: 1.6rem;
+  width: fit-content;
 }
 
 .sortByPriceDiv {
@@ -570,9 +577,152 @@
 .sortHeaderDiv {
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 18vw;
+
+}
+
+.matchCard {
   border: 1px solid black;
   justify-content: center;
   align-items: center;
-  gap: 20vw;
+  display: flex;
+  flex-direction: row;
+  border-radius: 2vh;
+}
 
+.standardizedProductDiv {
+  display: flex;
+  flex-direction: column;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 35vh;
+  width: 25vw;
+  border-right: 1px solid #9c9c9c;
+
+}
+
+.scrapedProductDiv {
+  border-right: 1px solid #9c9c9c;
+  display: flex;
+  flex-direction: column;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+    height: 35vh;
+  width: 25vw;
+
+
+}
+
+.matchResults {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5vh;
+
+}
+
+.standardizedProductImage {
+  height: 25vh;
+}
+
+.scrapedProductImage {
+  height: 25vh;
+}
+
+.standardizedProductParagraph {
+  font-family: Montserrat-Bold;
+  height: 10vh;
+  text-align: center;
+}
+
+.scrapedProductParagraph {
+font-family: Montserrat-Bold;
+  height: 10vh;
+  text-align: center;
+}
+
+.similarityDiv {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 10vw;
+  border-right: 1px solid #9c9c9c;
+  height: 35vh
+}
+
+.similarityValue {
+  font-size: 2rem;
+  font-family: Inter;
+}
+
+.confirmSimilarityBtn {
+  font-size: 1.5rem;
+  padding: 1vh;
+  margin-left: 1vw;
+  margin-right: 1vw;
+  background-color: #00b377;
+  color: white;
+  border-radius: 1vh;
+}
+
+.confirmSimilarityBtn:hover {
+  cursor: pointer;
+  background-color: #005c47;
+}
+
+.closeModalBtn {
+  height: 3vh;
+  padding: 1vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15vh;
+  outline: none;
+  overflow: hidden;
+  border: none;
+}
+
+.closeSortBtn {
+  border: none;
+  border-radius: 10vh;
+  background-color: #c3c3c3;
+  padding: 0.5vh;
+}
+
+.closeSortBtn:hover {
+  cursor: pointer;
+  background-color: #9c9c9c;
+  scale: 1.1;
+}
+
+.applySortBtn {
+    font-family: Montserrat-Bold;
+  font-size: 1.6rem;
+  width: 16vw;
+  border-radius: 2vh;
+  border: none;
+  height: 6vh;
+  background-color: #009966;
+  color: white;
+}
+
+.applySortBtn:hover {
+  cursor: pointer;
+  background-color: #005c47;
+}
+
+.applySortDiv {
+  width: 28vw;
+  padding: 2vh;
+  height: fit-content;
+  margin-top: 2.5vh;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }

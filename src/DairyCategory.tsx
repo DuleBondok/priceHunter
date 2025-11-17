@@ -40,6 +40,20 @@ function DairyCategory() {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  type SortOption =
+    | "cheapest"
+    | "expensive"
+    | "discount"
+    | "bestDeal"
+    | "new"
+    | "popular";
+
+  const [selected, setSelected] = useState<SortOption | null>(null);
+
+  const handleCheck = (name: SortOption) => {
+    setSelected((prev) => (prev === name ? null : name));
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true); // Start loader before fetching
@@ -368,68 +382,113 @@ function DairyCategory() {
             Sortiraj po{" "}
             <img src="./images/downArrowIcon.png" className="downArrowIcon" />
           </button>
-          
-            <Modal isOpen={isModalOpen} onClose={closeModal}>
-              <div className="sortModal">
-                <div className="sortHeaderDiv">
-                    <h3 className="sortingHeader">Sortiraj po</h3>
-                    <button className="closeSortBtn" onClick={closeModal}>x</button>
-                </div>
-                
-                <div className="sortSecondHeader">
-                  <div className="sortByPriceDiv">
-                    <img src="./images/downSort.png" className="sortImg"></img>
-                    <p className="sortByParagraph">Cena (prvo najjeftinije)</p>
-                    <label className="checkBoxLabel">
-                      <input name="dummy" type="checkbox"></input>
-                      <span className="checkBoxSpan"></span>
-                    </label>
-                  </div>
 
-                  <div className="sortByPriceDiv">
-                    <img src="./images/upSort.png" className="sortImg"></img>
-                    <p className="sortByParagraph">Cena (prvo najskuplje)</p>
-                    <label className="checkBoxLabel">
-                      <input name="dummy" type="checkbox"></input>
-                      <span className="checkBoxSpan"></span>
-                    </label>
-                  </div>
-                  <div className="sortByPriceDiv">
-                    <img src="./images/discountIcon.png" className="sortImg"></img>
-                    <p className="sortByParagraph">Najveci popust</p>
-                    <label className="checkBoxLabel">
-                      <input name="dummy" type="checkbox"></input>
-                      <span className="checkBoxSpan"></span>
-                    </label>
-                  </div>
-                   <div className="sortByPriceDiv">
-                    <img src="./images/starMedalIcon.png" className="sortImg"></img>
-                    <p className="sortByParagraph">Najpovoljnije</p>
-                    <label className="checkBoxLabel">
-                      <input name="dummy" type="checkbox"></input>
-                      <span className="checkBoxSpan"></span>
-                    </label>
-                  </div>
-                   <div className="sortByPriceDiv">
-                    <img src="./images/newIcon.png" className="sortImg"></img>
-                    <p className="sortByParagraph">Novi proizvodi</p>
-                    <label className="checkBoxLabel">
-                      <input name="dummy" type="checkbox"></input>
-                      <span className="checkBoxSpan"></span>
-                    </label>
-                  </div>
-                   <div className="sortByPriceDiv">
-                    <img src="./images/flameIcon.png" className="sortImg"></img>
-                    <p className="sortByParagraph">Najpopulariniji proizvodi</p>
-                    <label className="checkBoxLabel">
-                      <input name="dummy" type="checkbox"></input>
-                      <span className="checkBoxSpan"></span>
-                    </label>
-                  </div>
+          <Modal isOpen={isModalOpen} onClose={closeModal}>
+            <div className="sortModal">
+              <div className="sortHeaderDiv">
+                <h3 className="sortingHeader">Sortiraj po</h3>
+                <button className="closeSortBtn" onClick={closeModal}>
+                  <img
+                    className="closeModalBtn"
+                    src="./images/closeModal.png"
+                  ></img>
+                </button>
+              </div>
+
+              <div className="sortSecondHeader">
+                <div className="sortByPriceDiv">
+                  <img src="./images/downSort.png" className="sortImg"></img>
+                  <p className="sortByParagraph">Cena (prvo najjeftinije)</p>
+                  <label className="checkBoxLabel">
+                    <input
+                      name="dummy"
+                      type="checkbox"
+                      checked={selected === "cheapest"}
+                      onChange={() => handleCheck("cheapest")}
+                    ></input>
+                    <span className="checkBoxSpan"></span>
+                  </label>
+                </div>
+
+                <div className="sortByPriceDiv">
+                  <img src="./images/upSort.png" className="sortImg"></img>
+                  <p className="sortByParagraph">Cena (prvo najskuplje)</p>
+                  <label className="checkBoxLabel">
+                    <input
+                      name="dummy"
+                      type="checkbox"
+                      checked={selected === "expensive"}
+                      onChange={() => handleCheck("expensive")}
+                    ></input>
+                    <span className="checkBoxSpan"></span>
+                  </label>
+                </div>
+                <div className="sortByPriceDiv">
+                  <img
+                    src="./images/discountIcon.png"
+                    className="sortImg"
+                  ></img>
+                  <p className="sortByParagraph">Najveci popust</p>
+                  <label className="checkBoxLabel">
+                    <input
+                      name="dummy"
+                      type="checkbox"
+                      checked={selected === "discount"}
+                      onChange={() => handleCheck("discount")}
+                    ></input>
+                    <span className="checkBoxSpan"></span>
+                  </label>
+                </div>
+                <div className="sortByPriceDiv">
+                  <img
+                    src="./images/starMedalIcon.png"
+                    className="sortImg"
+                  ></img>
+                  <p className="sortByParagraph">Najpovoljnije</p>
+                  <label className="checkBoxLabel">
+                    <input
+                      name="dummy"
+                      type="checkbox"
+                      checked={selected === "bestDeal"}
+                      onChange={() => handleCheck("bestDeal")}
+                    ></input>
+                    <span className="checkBoxSpan"></span>
+                  </label>
+                </div>
+                <div className="sortByPriceDiv">
+                  <img src="./images/newIcon.png" className="sortImg"></img>
+                  <p className="sortByParagraph">Novi proizvodi</p>
+                  <label className="checkBoxLabel">
+                    <input
+                      name="dummy"
+                      type="checkbox"
+                      checked={selected === "new"}
+                      onChange={() => handleCheck("new")}
+                    ></input>
+                    <span className="checkBoxSpan"></span>
+                  </label>
+                </div>
+                <div className="sortByPriceDiv">
+                  <img src="./images/flameIcon.png" className="sortImg"></img>
+                  <p className="sortByParagraph">Najpopulariniji proizvodi</p>
+                  <label className="checkBoxLabel">
+                    <input
+                      name="dummy"
+                      type="checkbox"
+                      checked={selected === "popular"}
+                      onChange={() => handleCheck("popular")}
+                    ></input>
+                    <span className="checkBoxSpan"></span>
+                  </label>
                 </div>
               </div>
-            </Modal>
-          
+              <div className="applySortDiv">
+                <button className="applySortBtn" onClick={closeModal}>
+                  Primeni
+                </button>
+              </div>
+            </div>
+          </Modal>
 
           <button className="filtersBtn">
             Filteri

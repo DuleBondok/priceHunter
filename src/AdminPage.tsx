@@ -51,11 +51,11 @@ function AdminPage() {
       console.error(err);
     }
   };
-function getImageUrl(image: string | null | undefined) {
-  if (!image) return ""; // or a placeholder image URL
-  if (image.startsWith("http")) return image;
-  return `https://online.idea.rs/${image}`;
-}
+  function getImageUrl(image: string | null | undefined) {
+    if (!image) return ""; // or a placeholder image URL
+    if (image.startsWith("http")) return image;
+    return `https://online.idea.rs/${image}`;
+  }
 
   return (
     <>
@@ -75,25 +75,29 @@ function getImageUrl(image: string | null | undefined) {
                 {match.standardizedProduct.brand}{" "}
                 {match.standardizedProduct.name}
               </p>
-              <img src={match.standardizedProduct.image} className="standardizedProductImage"></img>
+              <img
+                src={match.standardizedProduct.image}
+                className="standardizedProductImage"
+              ></img>
               <p className="standardizedProductText">standardized</p>
             </div>
             <div className="scrapedProductDiv">
-              <p className="scrapedProductParagraph">
-            {match.product.name}
-              </p>
+              <p className="scrapedProductParagraph">{match.product.name}</p>
               <img
-  src={getImageUrl(match.product.image)}
-  alt="Product"
-  className="scrapedProductImage"
-/>
+                src={getImageUrl(match.product.image)}
+                alt="Product"
+                className="scrapedProductImage"
+              />
               <p className="scrapedProductText">scraped</p>
             </div>
             <div className="similarityDiv">
-              <p className="similarityValue">{(match.similarity * 100).toFixed(1)}%</p>
+              <p className="similarityValue">
+                {(match.similarity * 100).toFixed(1)}%
+              </p>
               <p>Similarity</p>
             </div>
-            <button className="confirmSimilarityBtn"
+            <button
+              className="confirmSimilarityBtn"
               onClick={() =>
                 confirmMatch(match.product.id, match.standardizedProduct.id)
               }
