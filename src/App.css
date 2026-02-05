@@ -439,7 +439,7 @@
     position: relative;
     border-radius: 2vh;
     width: 14vw;
-    height: 46vh;
+    height: 52vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -545,26 +545,47 @@ display: -webkit-box;            /* Needed for line clamp */
 
 
 .storeLogoImg {
-    height: 2vh;
+    height: 2.6vh;
     object-fit: contain;
     width: auto;
 }
 
-.storeLogosDiv {
+.priceInformationDiv {
     display: flex;
     flex-direction: row;
-    justify-content: left;
     align-items: center;
-    gap: 1.2vw;
+    justify-content: center;
+    gap: 4vw;
+}
+
+.priceInformationOuterDiv {
+    display: flex;
+    flex-direction: column;
+    gap: 2vh;
     margin-top: 1.5vh;
-    width: 12.2vw;
+    height: 12vh;
+}
+
+.discountBadge {
+    font-size: 3rem;
+    color: blue;
+}
+
+.storeLogosDiv {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: left;
+    gap: 1.2vw;
+    width: 5vw;
+    
 }
 
 .priceParagraph {
-    margin-top: 1vh;
     font-family: Inter;
-    width: 12.5vw;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    min-width: 5vw;
+    text-align: left;
 }
 
 .productWeightDiv {

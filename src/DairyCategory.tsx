@@ -50,59 +50,108 @@ function DairyCategory() {
 
   const [selected, setSelected] = useState<SortOption | null>(null);
 
-  const handleCheck = (name: SortOption) => {
-    setSelected((prev) => (prev === name ? null : name));
+const handleCheck = (option: SortOption) => {
+  setSelected((prev) => (prev === option ? null : option)); // toggle off if same
+};
+
+useEffect(() => {
+  setSelected(null); 
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const category = "Mlecni proizvodi i jaja";
+      let query = `/${encodeURIComponent(category)}`;
+      if (selectedMidCategory)
+        query += `/${encodeURIComponent(selectedMidCategory)}`;
+      if (selectedSubCategory)
+        query += `/${encodeURIComponent(selectedSubCategory)}`;
+
+      const res = await fetch(`http://localhost:5000/api/products${query}`);
+
+      if (!res.ok) {
+        const errData = await res.json();
+        setError(errData.message || "Failed to fetch products");
+        setProducts([]);
+        return;
+      }
+
+      const rawData = await res.json();
+
+      const transformedData: StandardizedProduct[] = rawData.map(
+        (product: any) => ({
+          ...product,
+          products: (product.products || []).map((p: any) => ({
+            id: p.id ?? `${product.id}-${p.store}`,
+            name: p.name ?? product.name,
+            brand: p.brand ?? product.brand,
+            price: String(p.price ?? "0"),
+            store: p.store,
+            image: p.image ?? product.image ?? null,
+          })),
+        })
+      );
+
+      setProducts(transformedData);
+      setError("");
+    } catch (err) {
+      setError("Network error");
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true); // Start loader before fetching
-      try {
-        const category = "Mlecni proizvodi i jaja";
-        let query = `/${encodeURIComponent(category)}`;
-        if (selectedMidCategory)
-          query += `/${encodeURIComponent(selectedMidCategory)}`;
-        if (selectedSubCategory)
-          query += `/${encodeURIComponent(selectedSubCategory)}`;
+  fetchProducts();
+}, [selectedMidCategory, selectedSubCategory]);
 
-        const res = await fetch(`http://localhost:5000/api/products${query}`);
 
-        if (!res.ok) {
-          const errData = await res.json();
-          setError(errData.message || "Failed to fetch products");
-          setProducts([]); // Clear previous products if error
-          return;
-        }
+useEffect(() => {
+  if (!selected) return;
 
-        const rawData = await res.json();
+  setProducts(current => {
+    const list = current.map(p => ({
+      ...p,
+      products: [...p.products]
+    }));
 
-        const transformedData: StandardizedProduct[] = rawData.map(
-          (product: any) => ({
-            ...product,
-            products: (product.products || []).map((p: any) => ({
-              id: p.id ?? `${product.id}-${p.store}`,
-              name: p.name ?? product.name,
-              brand: p.brand ?? product.brand,
-              price: String(p.price ?? "0"),
-              store: p.store,
-              image: p.image ?? product.image ?? null,
-            })),
-          })
-        );
-
-        setProducts(transformedData);
-        setError(""); // Clear error on success
-      } catch (err) {
-        console.error("Failed to load products", err);
-        setError("Network error");
-        setProducts([]); // Clear products on error
-      } finally {
-        setLoading(false); // Stop loader after fetch (success or error)
-      }
+    // PRAVILNO čitanje cene (",", prazno, "0" → sve rešeno)
+    const getPrice = (priceStr: string): number => {
+      if (!priceStr) return Infinity;
+      const cleaned = String(priceStr).trim().replace(",", ".");
+      const num = parseFloat(cleaned);
+      return isNaN(num) || num <= 0 ? Infinity : num;
     };
 
-    fetchProducts();
-  }, [selectedMidCategory, selectedSubCategory]);
+    // Najjeftinija cena kod proizvoda
+    const cheapest = (item: StandardizedProduct) => {
+      const prices = item.products.map(p => getPrice(p.price));
+      return Math.min(...prices);
+    };
+
+    // Najskuplja cena kod proizvoda
+    const mostExpensive = (item: StandardizedProduct) => {
+      const prices = item.products.map(p => getPrice(p.price)).filter(p => p !== Infinity);
+      return prices.length > 0 ? Math.max(...prices) : -Infinity; // važno: -Infinity, ne 0!
+    };
+
+    list.sort((a, b) => {
+      if (selected === "cheapest") {
+        return cheapest(a) - cheapest(b); // radi perfektno
+      }
+
+      if (selected === "expensive") {
+        const priceA = mostExpensive(a);
+        const priceB = mostExpensive(b);
+        // najveći broj prvi → obrnuto
+        return priceB - priceA;
+      }
+
+      return 0;
+    });
+
+    return list;
+  });
+}, [selected]);
 
   const onPlus = (id: string) => {
     setQuantities((prev) => ({
@@ -401,7 +450,7 @@ function DairyCategory() {
                   <p className="sortByParagraph">Cena (prvo najjeftinije)</p>
                   <label className="checkBoxLabel">
                     <input
-                      name="dummy"
+                      
                       type="checkbox"
                       checked={selected === "cheapest"}
                       onChange={() => handleCheck("cheapest")}
@@ -415,7 +464,7 @@ function DairyCategory() {
                   <p className="sortByParagraph">Cena (prvo najskuplje)</p>
                   <label className="checkBoxLabel">
                     <input
-                      name="dummy"
+                      
                       type="checkbox"
                       checked={selected === "expensive"}
                       onChange={() => handleCheck("expensive")}
@@ -431,7 +480,7 @@ function DairyCategory() {
                   <p className="sortByParagraph">Najveci popust</p>
                   <label className="checkBoxLabel">
                     <input
-                      name="dummy"
+                      
                       type="checkbox"
                       checked={selected === "discount"}
                       onChange={() => handleCheck("discount")}
@@ -447,7 +496,7 @@ function DairyCategory() {
                   <p className="sortByParagraph">Najpovoljnije</p>
                   <label className="checkBoxLabel">
                     <input
-                      name="dummy"
+                      
                       type="checkbox"
                       checked={selected === "bestDeal"}
                       onChange={() => handleCheck("bestDeal")}
@@ -460,7 +509,7 @@ function DairyCategory() {
                   <p className="sortByParagraph">Novi proizvodi</p>
                   <label className="checkBoxLabel">
                     <input
-                      name="dummy"
+                      
                       type="checkbox"
                       checked={selected === "new"}
                       onChange={() => handleCheck("new")}
@@ -473,7 +522,7 @@ function DairyCategory() {
                   <p className="sortByParagraph">Najpopulariniji proizvodi</p>
                   <label className="checkBoxLabel">
                     <input
-                      name="dummy"
+                      
                       type="checkbox"
                       checked={selected === "popular"}
                       onChange={() => handleCheck("popular")}

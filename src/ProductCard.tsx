@@ -39,46 +39,50 @@ const ProductCard: React.FC<Props> = ({
           alt="Product Image"
           className="productImage"
         />
-        <div className="storeLogosDiv">
-          {product.products
-            .slice()
-            .sort(
-              (a, b) =>
-                storeOrder.indexOf(a.store) - storeOrder.indexOf(b.store)
-            )
-            .map((p, index) => (
-              <img
-                key={index}
-                src={storeLogos[p.store]}
-                alt={p.store}
-                title={p.store}
-                className="storeLogoImg"
-              />
-            ))}
-        </div>
+
         <h3 className="productName">
           {product.brand} {product.name}
         </h3>
         <div className="productWeightDiv">
           <img src="./images/scaleIcon.png" className="scaleIcon"></img>
           <p className="productWeightParagraph">{product.volume}</p>
-
         </div>
+        <div className="priceInformationOuterDiv">
+  {product.products
+    .slice()
+    .filter((p) => p.price != null)
+    .sort(
+      (a, b) =>
+        Number(a.price ?? Infinity) - Number(b.price ?? Infinity),
+    )
+    .map((p, index) => {
 
-        <p className="priceParagraph">
-          {prices.length > 0 ? (
-            minPrice === maxPrice ? (
-              <span style={{ color: "green" }}>{minPrice} dinara</span>
-            ) : (
-              <>
-                od <span style={{ color: "green" }}>{minPrice}</span> RSD do{" "}
-                <span style={{ color: "red" }}>{maxPrice}</span> RSD
-              </>
-            )
-          ) : (
-            "No prices available"
-          )}
-        </p>
+      return (
+        <div className="priceInformationDiv" key={p.store ?? index}>
+          <div className="storeLogosDiv">
+            <img
+              src={storeLogos[p.store]}
+              alt={p.store}
+              title={p.store}
+              className="storeLogoImg"
+            />
+          </div>
+
+          <p className="priceParagraph">
+            <span style={{ color: index === 0 ? "green" : "black" }}>
+              {p.price}
+            </span>
+
+            {p.hasDiscount && (
+              <span className="discountBadge">
+                -{p.discountPercent}
+              </span>
+            )}
+          </p>
+        </div>
+      );
+    })}
+</div>
 
         <div className="productQuantityDiv">
           <button
@@ -95,7 +99,10 @@ const ProductCard: React.FC<Props> = ({
         </div>
 
         <button className="addToListBtn" onClick={onAddToList}>
-          <img className="shoppingCartWhiteIcon" src="./images/shoppingCartIcon.png"></img>
+          <img
+            className="shoppingCartWhiteIcon"
+            src="./images/shoppingCartIcon.png"
+          ></img>
           KUPI
         </button>
       </div>
