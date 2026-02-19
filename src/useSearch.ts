@@ -5,11 +5,12 @@ export type Product = {
   name: string;
   brand: string;
   price: string;
-   priceBeforeDiscount?: number | null;
   store: string;
   image?: string | null;
-  discountPercent?: number | null;
+
   hasDiscount?: boolean;
+  discountPercent?: number | null;
+  priceBeforeDiscount?: number | null; // ✅ IMPORTANT: number|null
 };
 
 export type StandardizedProduct = {

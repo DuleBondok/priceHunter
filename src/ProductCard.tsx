@@ -48,41 +48,74 @@ const ProductCard: React.FC<Props> = ({
           <p className="productWeightParagraph">{product.volume}</p>
         </div>
         <div className="priceInformationOuterDiv">
-  {product.products
-    .slice()
-    .filter((p) => p.price != null)
-    .sort(
-      (a, b) =>
-        Number(a.price ?? Infinity) - Number(b.price ?? Infinity),
-    )
-    .map((p, index) => {
+          {product.products
+            .slice()
+            .filter((p) => p.price != null)
+            .sort(
+              (a, b) =>
+                Number(a.price ?? Infinity) - Number(b.price ?? Infinity),
+            )
+            .map((p, index) => {
+              const isBestPrice = index === 0;
 
-      return (
-        <div className="priceInformationDiv" key={p.store ?? index}>
-          <div className="storeLogosDiv">
-            <img
-              src={storeLogos[p.store]}
-              alt={p.store}
-              title={p.store}
-              className="storeLogoImg"
-            />
-          </div>
+              return (
+                <div
+                  className={`priceInformationDiv ${
+                    isBestPrice ? "bestPriceDiv" : ""
+                  }`}
+                  key={p.store ?? index}
+                >
+                  {isBestPrice && (
+                    <p className="bestPriceLabel">NAJBOLJA CENA</p>
+                  )}
 
-          <p className="priceParagraph">
-            <span style={{ color: index === 0 ? "green" : "black" }}>
-              {p.price}
-            </span>
+                  {/* Row content */}
+                  <div
+                    className={`priceRow ${isBestPrice ? "bestPriceRow" : ""}`}
+                  >
+                    <div className="storeLogosDiv">
+                      <img
+                        src={storeLogos[p.store]}
+                        alt={p.store}
+                        title={p.store}
+                        className="storeLogoImg"
+                      />
+                    </div>
 
-            {p.hasDiscount && (
-              <span className="discountBadge">
-                -{p.discountPercent}
-              </span>
-            )}
-          </p>
+                    <p
+                      className={`priceParagraph ${
+                        isBestPrice ? "bestPriceParagraph" : ""
+                      }`}
+                    >
+                      <span
+                        style={{
+                          color: p.hasDiscount
+                            ? "red"
+                            : isBestPrice
+                              ? "green"
+                              : "black",
+                        }}
+                      >
+                        {p.price}
+                      </span>
+                    </p>
+
+                    {p.hasDiscount && p.discountPercent != null && (
+                      <>
+                        <p
+                          className={`discountText ${
+                            isBestPrice ? "bestDiscountText" : ""
+                          }`}
+                        >
+                          -{p.discountPercent}%
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
         </div>
-      );
-    })}
-</div>
 
         <div className="productQuantityDiv">
           <button

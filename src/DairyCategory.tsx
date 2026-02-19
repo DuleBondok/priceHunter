@@ -6,23 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import Modal from "./DisplayModal";
+import type { Product, StandardizedProduct } from "./useSearch";
 
-type StandardizedProduct = {
-  id: string;
-  name: string;
-  brand: string;
-  image?: string | null;
-  volume: string;
-  mainCategory?: string;
-  products: {
-    id: string;
-    name: string;
-    brand: string;
-    price: string;
-    store: string;
-    image?: string | null;
-  }[];
-};
 
 function DairyCategory() {
   const [products, setProducts] = useState<StandardizedProduct[]>([]);
@@ -30,41 +15,40 @@ function DairyCategory() {
   const [error, setError] = useState<string>("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedMidCategory, setSelectedMidCategory] = useState<string | null>(
-    null
+    null,
   );
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(
-    null
+    null,
   );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  type SortOption =
-    | "cheapest"
-    | "expensive"
-    | "discount"
-    | "bestDeal"
-    | "new"
-    | "popular";
+type SortOption =
+  | "cheapest"
+  | "expensive"
+  | "discount"
+  | "bestDeal"
+  | "new"
+  | "popular";
 
-  const [selected, setSelected] = useState<SortOption | null>(null);
+const [selected, setSelected] = useState<SortOption | null>(null);
 
 const handleCheck = (option: SortOption) => {
-  setSelected((prev) => (prev === option ? null : option)); // toggle off if same
+  setSelected((prev) => (prev === option ? null : option));
 };
 
 useEffect(() => {
-  setSelected(null); 
+  setSelected(null);
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
       const category = "Mlecni proizvodi i jaja";
       let query = `/${encodeURIComponent(category)}`;
-      if (selectedMidCategory)
-        query += `/${encodeURIComponent(selectedMidCategory)}`;
-      if (selectedSubCategory)
-        query += `/${encodeURIComponent(selectedSubCategory)}`;
+      if (selectedMidCategory) query += `/${encodeURIComponent(selectedMidCategory)}`;
+      if (selectedSubCategory) query += `/${encodeURIComponent(selectedSubCategory)}`;
 
       const res = await fetch(`http://localhost:5000/api/products${query}`);
 
@@ -77,21 +61,33 @@ useEffect(() => {
 
       const rawData = await res.json();
 
-      const transformedData: StandardizedProduct[] = rawData.map(
-        (product: any) => ({
-          ...product,
-          products: (product.products || []).map((p: any) => ({
-            id: p.id ?? `${product.id}-${p.store}`,
-            name: p.name ?? product.name,
-            brand: p.brand ?? product.brand,
-            price: String(p.price ?? "0"),
-            store: p.store,
-            image: p.image ?? product.image ?? null,
-          })),
-        })
-      );
+      const toNumberOrNull = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(String(v).trim().replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
 
-      setProducts(transformedData);
+const transformedData: StandardizedProduct[] = rawData.map(
+  (product: any) => ({
+    ...product,
+    products: (product.products || []).map((p: any) => ({
+      ...p,
+
+      id: p.id ?? `${product.id}-${p.store}`,
+      name: p.name ?? product.name,
+      brand: p.brand ?? product.brand,
+      price: String(p.price ?? "0"),
+      store: p.store,
+      image: p.image ?? product.image ?? null,
+
+      hasDiscount: p.hasDiscount ?? false,
+      discountPercent: toNumberOrNull(p.discountPercent),
+      priceBeforeDiscount: toNumberOrNull(p.priceBeforeDiscount),
+    })),
+  }),
+);
+
+setProducts(transformedData);
       setError("");
     } catch (err) {
       setError("Network error");
@@ -104,17 +100,16 @@ useEffect(() => {
   fetchProducts();
 }, [selectedMidCategory, selectedSubCategory]);
 
-
 useEffect(() => {
   if (!selected) return;
 
-  setProducts(current => {
-    const list = current.map(p => ({
+  setProducts((current) => {
+    const list = current.map((p) => ({
       ...p,
-      products: [...p.products]
+      products: [...p.products],
     }));
 
-    // PRAVILNO čitanje cene (",", prazno, "0" → sve rešeno)
+    // price parsing
     const getPrice = (priceStr: string): number => {
       if (!priceStr) return Infinity;
       const cleaned = String(priceStr).trim().replace(",", ".");
@@ -122,30 +117,51 @@ useEffect(() => {
       return isNaN(num) || num <= 0 ? Infinity : num;
     };
 
-    // Najjeftinija cena kod proizvoda
+    // discount parsing
+    const getDiscount = (d: unknown): number => {
+      const num = Number(d);
+      return Number.isFinite(num) && num > 0 ? num : 0;
+    };
+
     const cheapest = (item: StandardizedProduct) => {
-      const prices = item.products.map(p => getPrice(p.price));
+      const prices = item.products.map((p) => getPrice(p.price));
       return Math.min(...prices);
     };
 
-    // Najskuplja cena kod proizvoda
     const mostExpensive = (item: StandardizedProduct) => {
-      const prices = item.products.map(p => getPrice(p.price)).filter(p => p !== Infinity);
-      return prices.length > 0 ? Math.max(...prices) : -Infinity; // važno: -Infinity, ne 0!
+      const prices = item.products
+        .map((p) => getPrice(p.price))
+        .filter((p) => p !== Infinity);
+      return prices.length > 0 ? Math.max(...prices) : -Infinity;
+    };
+
+    // biggest discount across stores for a product
+    const biggestDiscount = (item: StandardizedProduct) => {
+      const discounts = item.products.map((p) => getDiscount(p.discountPercent));
+      return Math.max(...discounts, 0);
     };
 
     list.sort((a, b) => {
       if (selected === "cheapest") {
-        return cheapest(a) - cheapest(b); // radi perfektno
+        return cheapest(a) - cheapest(b);
       }
 
       if (selected === "expensive") {
-        const priceA = mostExpensive(a);
-        const priceB = mostExpensive(b);
-        // najveći broj prvi → obrnuto
-        return priceB - priceA;
+        return mostExpensive(b) - mostExpensive(a); // desc
       }
 
+      if (selected === "discount") {
+        const dA = biggestDiscount(a);
+        const dB = biggestDiscount(b);
+
+        // bigger discount first
+        if (dB !== dA) return dB - dA;
+
+        // tie-breaker: cheaper first
+        return cheapest(a) - cheapest(b);
+      }
+
+      // TODO: implement bestDeal/new/popular later
       return 0;
     });
 
@@ -171,7 +187,7 @@ useEffect(() => {
     alert(
       `Dodato ${quantities[product.id]}x ${product.brand} ${
         product.name
-      } u listu.`
+      } u listu.`,
     );
     // Add to cart or list logic can be implemented here
   };
@@ -401,7 +417,7 @@ useEffect(() => {
                         }`}
                         onClick={() =>
                           setSelectedSubCategory(
-                            selectedSubCategory === sub.name ? null : sub.name
+                            selectedSubCategory === sub.name ? null : sub.name,
                           )
                         }
                         variants={{
@@ -450,7 +466,6 @@ useEffect(() => {
                   <p className="sortByParagraph">Cena (prvo najjeftinije)</p>
                   <label className="checkBoxLabel">
                     <input
-                      
                       type="checkbox"
                       checked={selected === "cheapest"}
                       onChange={() => handleCheck("cheapest")}
@@ -464,7 +479,6 @@ useEffect(() => {
                   <p className="sortByParagraph">Cena (prvo najskuplje)</p>
                   <label className="checkBoxLabel">
                     <input
-                      
                       type="checkbox"
                       checked={selected === "expensive"}
                       onChange={() => handleCheck("expensive")}
@@ -480,7 +494,6 @@ useEffect(() => {
                   <p className="sortByParagraph">Najveci popust</p>
                   <label className="checkBoxLabel">
                     <input
-                      
                       type="checkbox"
                       checked={selected === "discount"}
                       onChange={() => handleCheck("discount")}
@@ -496,7 +509,6 @@ useEffect(() => {
                   <p className="sortByParagraph">Najpovoljnije</p>
                   <label className="checkBoxLabel">
                     <input
-                      
                       type="checkbox"
                       checked={selected === "bestDeal"}
                       onChange={() => handleCheck("bestDeal")}
@@ -509,7 +521,6 @@ useEffect(() => {
                   <p className="sortByParagraph">Novi proizvodi</p>
                   <label className="checkBoxLabel">
                     <input
-                      
                       type="checkbox"
                       checked={selected === "new"}
                       onChange={() => handleCheck("new")}
@@ -522,7 +533,6 @@ useEffect(() => {
                   <p className="sortByParagraph">Najpopulariniji proizvodi</p>
                   <label className="checkBoxLabel">
                     <input
-                      
                       type="checkbox"
                       checked={selected === "popular"}
                       onChange={() => handleCheck("popular")}
