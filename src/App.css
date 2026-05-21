@@ -521,6 +521,32 @@
   color: #005440;
 }
 
+.filterMaxiImg {
+  height: 2.8vh;
+  margin-left: 2vw;
+}
+
+.filterVolumeList {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1vw;
+}
+
+.filterVolumeOption {
+  display: flex;
+  width: 5vw;
+}
+
+.downArrowFilterIcon {
+  transition: transform 0.3s ease;
+}
+
+.downArrowFilterIcon.open {
+  transform: rotate(180deg);
+}
+
+
 .productQuantityDiv {
   display: flex;
   flex-direction: row;
@@ -1001,4 +1027,298 @@
 
 .startShoppingBtn:active {
   transform: scale(0.98);
+}
+
+.scrapingPage {
+  padding: 24px;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.scrapingTopBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.scrapingSubInfo {
+  margin-top: 6px;
+  color: #4b5563;
+}
+
+.scrapingStatus {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.scrapingStatus.running {
+  color: #b45309;
+}
+
+.scrapingStatus.idle {
+  color: #166534;
+}
+
+.scrapingActions {
+  display: flex;
+  gap: 8px;
+}
+
+.scrapingActionBtn,
+.scrapingRefreshBtn {
+  height: 36px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 12px;
+  cursor: pointer;
+  background: white;
+}
+
+.scrapingActionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scrapingError {
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.scrapingContent {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+}
+
+.scrapingRunList,
+.scrapingRunDetails {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+}
+
+.scrapingRunList {
+  max-height: 75vh;
+  overflow: auto;
+}
+
+.scrapingRunRow {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+}
+
+.scrapingRunRow.active {
+  border-color: #2563eb;
+}
+
+.runBadge {
+  text-transform: uppercase;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.runBadge.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.runBadge.partial {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.runBadge.failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.runBadge.running {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.detailsMeta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.stepCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.finalInfoRow {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.stepHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: #374151;
+}
+
+.stepError {
+  color: #991b1b;
+  margin-top: 4px;
+}
+
+.stepLogs {
+  margin-top: 8px;
+  max-height: 220px;
+  overflow: auto;
+  background: #0f172a;
+  color: #d1fae5;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* Admin hub & sub-pages */
+.adminHub {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 3rem;
+}
+
+.adminHubTitle {
+  font-family: Montserrat-Bold, system-ui, sans-serif;
+  font-size: 1.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.adminHubSubtitle {
+  color: #64748b;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.adminHubGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.adminHubCard {
+  display: block;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.adminHubCard:hover {
+  border-color: #fb923c;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.adminHubCardTitle {
+  display: block;
+  font-family: Montserrat-Bold, system-ui, sans-serif;
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.adminHubCardDesc {
+  display: block;
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.adminSubPage {
+  padding: 1.25rem 1rem 3rem;
+}
+
+.adminSubPageBar {
+  max-width: 70vw;
+  margin: 0 auto 1rem;
+  padding-left: 0.25rem;
+}
+
+.adminSubPageBar h1 {
+  font-family: Montserrat-Bold, system-ui, sans-serif;
+  font-size: 1.35rem;
+  margin-top: 0.75rem;
+}
+
+.adminBackLink {
+  display: inline-block;
+  color: #ea580c;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.adminBackLink:hover {
+  text-decoration: underline;
+}
+
+.adminSubPageHint {
+  max-width: 70vw;
+  margin: 0 auto 1rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.matchesFilters {
+  max-width: 70vw;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: flex-end;
+}
+
+.matchesFilterField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 200px;
+}
+
+.matchesFilterLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.matchesFilterSelect {
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
+  max-width: min(360px, 85vw);
 }

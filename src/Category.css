@@ -150,6 +150,12 @@
   height: 3vh;
 }
 
+.downArrowFilterIcon {
+  height: 3vh;
+  position: absolute;
+  right: 1.8vw;
+}
+
 .sortByBtn {
   display: flex;
   flex-direction: row;
@@ -483,6 +489,17 @@
   position: relative;
   height: 6vh;
 }
+
+.filterOptionsDiv {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  height: 6vh;
+  background-color: #e0e0e0;
+  padding-left: 1vw;
+  border-radius: 1vh;
+}
 .sortByParagraph {
   font-family: SourGummy;
   font-size: 1.4rem;
@@ -506,6 +523,73 @@
 
 
 /* sorting checkbox design: */ 
+.checkBoxFilterLabel {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 16px;
+  color: #333;
+  transition: color 0.3s;
+  position: absolute;
+  left: 1;
+  margin-right: 1vw;
+}
+
+.checkBoxFilterLabel input[type="checkbox"] {
+  display: none;
+}
+
+.checkBoxFilterLabel .checkBoxSpan {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  transition: background-color 0.3s, border-color 0.3s, transform 0.3s;
+  transform-style: preserve-3d;
+}
+
+.checkBoxFilterLabel .checkBoxSpan::before {
+  content: "\2713";
+  font-size: 16px;
+  color: transparent;
+  transition: color 0.3s, transform 0.3s;
+}
+
+.checkBoxFilterLabel input[type="checkbox"]:checked + .checkBoxSpan {
+  background-color: #009966;
+  border-color: #009966;
+  transform: scale(1.1) rotateZ(360deg) rotateY(360deg);
+}
+
+.checkBoxFilterLabel input[type="checkbox"]:checked + .checkBoxSpan::before {
+  color: #fff;
+}
+
+.checkBoxFilterLabel:hover {
+  color: #666;
+}
+
+.checkBoxFilterLabel:hover .checkBoxSpan {
+  border-color: #666;
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.checkBoxFilterLabel input[type="checkbox"]:focus + .checkBoxSpan {
+  box-shadow: 0 0 3px 2px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+.checkBoxFilterLabel .checkBoxSpan,
+.checkBoxFilterLabel input[type="checkbox"]:checked + .checkBoxSpan {
+  transition: background-color 1.3s, border-color 1.3s, color 1.3s, transform 0.3s;
+}
+
 
 .checkBoxLabel {
   display: inline-flex;
@@ -580,6 +664,15 @@
   justify-content: center;
   align-items: center;
   gap: 18vw;
+
+}
+
+.filterHeaderDiv {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 21vw;
 
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import CategoryHeader from "./CategoryHeader";
 import "./Category.css";
 import ProductCard from "./ProductCard";
@@ -7,7 +7,6 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import Modal from "./DisplayModal";
 import type { Product, StandardizedProduct } from "./useSearch";
-
 
 function DairyCategory() {
   const [products, setProducts] = useState<StandardizedProduct[]>([]);
@@ -25,149 +24,252 @@ function DairyCategory() {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-type SortOption =
-  | "cheapest"
-  | "expensive"
-  | "discount"
-  | "bestDeal"
-  | "new"
-  | "popular";
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const openFilterModal = () => setIsFilterModalOpen(true);
+  const closeFilterModal = () => setIsFilterModalOpen(false);
 
-const [selected, setSelected] = useState<SortOption | null>(null);
+  const [openStoreFilter, setOpenStoreFilter] = useState(false);
+  const [openVolumeFilter, setOpenVolumeFilter] = useState(false);
 
-const handleCheck = (option: SortOption) => {
-  setSelected((prev) => (prev === option ? null : option));
-};
+  type SortOption =
+    | "cheapest"
+    | "expensive"
+    | "discount"
+    | "bestDeal"
+    | "newest"
+    | "popular";
 
-useEffect(() => {
-  setSelected(null);
+  const [selected, setSelected] = useState<SortOption | null>(null);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const category = "Mlecni proizvodi i jaja";
-      let query = `/${encodeURIComponent(category)}`;
-      if (selectedMidCategory) query += `/${encodeURIComponent(selectedMidCategory)}`;
-      if (selectedSubCategory) query += `/${encodeURIComponent(selectedSubCategory)}`;
-
-      const res = await fetch(`http://localhost:5000/api/products${query}`);
-
-      if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.message || "Failed to fetch products");
-        setProducts([]);
-        return;
-      }
-
-      const rawData = await res.json();
-
-      const toNumberOrNull = (v: unknown): number | null => {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(String(v).trim().replace(",", "."));
-  return Number.isFinite(n) ? n : null;
-};
-
-const transformedData: StandardizedProduct[] = rawData.map(
-  (product: any) => ({
-    ...product,
-    products: (product.products || []).map((p: any) => ({
-      ...p,
-
-      id: p.id ?? `${product.id}-${p.store}`,
-      name: p.name ?? product.name,
-      brand: p.brand ?? product.brand,
-      price: String(p.price ?? "0"),
-      store: p.store,
-      image: p.image ?? product.image ?? null,
-
-      hasDiscount: p.hasDiscount ?? false,
-      discountPercent: toNumberOrNull(p.discountPercent),
-      priceBeforeDiscount: toNumberOrNull(p.priceBeforeDiscount),
-    })),
-  }),
-);
-
-setProducts(transformedData);
-      setError("");
-    } catch (err) {
-      setError("Network error");
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleCheck = (option: SortOption) => {
+    setSelected((prev) => (prev === option ? null : option));
   };
 
-  fetchProducts();
-}, [selectedMidCategory, selectedSubCategory]);
+  // -----------------------------
+  // ✅ FILTER STATE (STORE + VOLUME)
+  // -----------------------------
+  type StoreFilter = "MAXI" | "IDEA" | "DIS";
 
-useEffect(() => {
-  if (!selected) return;
+  const [selectedStores, setSelectedStores] = useState<StoreFilter[]>([]);
+  const [selectedVolumes, setSelectedVolumes] = useState<string[]>([]);
 
-  setProducts((current) => {
-    const list = current.map((p) => ({
-      ...p,
-      products: [...p.products],
-    }));
+  const toggleStore = (store: StoreFilter) => {
+    setSelectedStores((prev) =>
+      prev.includes(store) ? prev.filter((s) => s !== store) : [...prev, store],
+    );
+  };
 
-    // price parsing
-    const getPrice = (priceStr: string): number => {
-      if (!priceStr) return Infinity;
-      const cleaned = String(priceStr).trim().replace(",", ".");
-      const num = parseFloat(cleaned);
-      return isNaN(num) || num <= 0 ? Infinity : num;
-    };
+  const toggleVolume = (vol: string) => {
+    setSelectedVolumes((prev) =>
+      prev.includes(vol) ? prev.filter((v) => v !== vol) : [...prev, vol],
+    );
+  };
 
-    // discount parsing
-    const getDiscount = (d: unknown): number => {
-      const num = Number(d);
-      return Number.isFinite(num) && num > 0 ? num : 0;
-    };
+  // ✅ When user changes mid/subcategory, reset filters (optional but recommended)
+  useEffect(() => {
+    setSelectedStores([]);
+    setSelectedVolumes([]);
+  }, [selectedMidCategory, selectedSubCategory]);
 
-    const cheapest = (item: StandardizedProduct) => {
-      const prices = item.products.map((p) => getPrice(p.price));
-      return Math.min(...prices);
-    };
+  // ⚠️ IMPORTANT: change this getter if your volume field is different
+  // Example alternatives: p.kolicina, p.quantity, p.weight
+  const getVolumeFromStandardized = (sp: any) =>
+    String(sp?.volume ?? "").trim();
 
-    const mostExpensive = (item: StandardizedProduct) => {
-      const prices = item.products
-        .map((p) => getPrice(p.price))
-        .filter((p) => p !== Infinity);
-      return prices.length > 0 ? Math.max(...prices) : -Infinity;
-    };
+  // ✅ Build list of volumes that exist in CURRENT products list
+  const availableVolumes = useMemo(() => {
+    const set = new Set<string>();
 
-    // biggest discount across stores for a product
-    const biggestDiscount = (item: StandardizedProduct) => {
-      const discounts = item.products.map((p) => getDiscount(p.discountPercent));
-      return Math.max(...discounts, 0);
-    };
-
-    list.sort((a, b) => {
-      if (selected === "cheapest") {
-        return cheapest(a) - cheapest(b);
-      }
-
-      if (selected === "expensive") {
-        return mostExpensive(b) - mostExpensive(a); // desc
-      }
-
-      if (selected === "discount") {
-        const dA = biggestDiscount(a);
-        const dB = biggestDiscount(b);
-
-        // bigger discount first
-        if (dB !== dA) return dB - dA;
-
-        // tie-breaker: cheaper first
-        return cheapest(a) - cheapest(b);
-      }
-
-      // TODO: implement bestDeal/new/popular later
-      return 0;
+    products.forEach((sp: any) => {
+      const vol = getVolumeFromStandardized(sp);
+      if (vol) set.add(vol);
     });
 
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [products]);
+
+  // ✅ Apply filters to the list you render (NOT the fetched list)
+  const filteredProducts = useMemo(() => {
+    let list = products;
+
+    // filter by store (keeps standardized product if ANY store matches)
+    if (selectedStores.length > 0) {
+      list = list.filter((sp) =>
+        (sp.products || []).some((p: any) =>
+          selectedStores.includes(String(p.store).toUpperCase() as StoreFilter),
+        ),
+      );
+    }
+
+    // filter by volume (keeps standardized product if ANY store has that volume)
+    if (selectedVolumes.length > 0) {
+      list = list.filter((sp: any) =>
+        selectedVolumes.includes(getVolumeFromStandardized(sp)),
+      );
+    }
+
     return list;
-  });
-}, [selected]);
+  }, [products, selectedStores, selectedVolumes]);
+
+  const clearFilters = () => {
+    setSelectedStores([]);
+    setSelectedVolumes([]);
+  };
+
+  const applyFilters = () => {
+    closeFilterModal();
+  };
+
+  useEffect(() => {
+    setSelected(null);
+
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const category = "Mlecni proizvodi i jaja";
+        let query = `/${encodeURIComponent(category)}`;
+        if (selectedMidCategory)
+          query += `/${encodeURIComponent(selectedMidCategory)}`;
+        if (selectedSubCategory)
+          query += `/${encodeURIComponent(selectedSubCategory)}`;
+
+        const res = await fetch(`http://localhost:5000/api/products${query}`);
+
+        if (!res.ok) {
+          const errData = await res.json();
+          setError(errData.message || "Failed to fetch products");
+          setProducts([]);
+          return;
+        }
+
+        const rawData = await res.json();
+
+        const toNumberOrNull = (v: unknown): number | null => {
+          if (v === null || v === undefined || v === "") return null;
+          const n = Number(String(v).trim().replace(",", "."));
+          return Number.isFinite(n) ? n : null;
+        };
+
+        const transformedData: StandardizedProduct[] = rawData.map(
+          (product: any) => ({
+            ...product,
+            products: (product.products || []).map((p: any) => ({
+              ...p,
+
+              id: p.id ?? `${product.id}-${p.store}`,
+              name: p.name ?? product.name,
+              brand: p.brand ?? product.brand,
+              price: String(p.price ?? "0"),
+              store: p.store,
+              image: p.image ?? product.image ?? null,
+
+              hasDiscount: p.hasDiscount ?? false,
+              discountPercent: toNumberOrNull(p.discountPercent),
+              priceBeforeDiscount: toNumberOrNull(p.priceBeforeDiscount),
+            })),
+          }),
+        );
+
+        setProducts(transformedData);
+        setError("");
+      } catch (err) {
+        setError("Network error");
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [selectedMidCategory, selectedSubCategory]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    setProducts((current) => {
+      const list = current.map((p) => ({
+        ...p,
+        products: [...p.products],
+      }));
+
+      // price parsing
+      const getPrice = (priceStr: string): number => {
+        if (!priceStr) return Infinity;
+        const cleaned = String(priceStr).trim().replace(",", ".");
+        const num = parseFloat(cleaned);
+        return isNaN(num) || num <= 0 ? Infinity : num;
+      };
+
+      // discount parsing
+      const getDiscount = (d: unknown): number => {
+        const num = Number(d);
+        return Number.isFinite(num) && num > 0 ? num : 0;
+      };
+
+      const cheapest = (item: StandardizedProduct) => {
+        const prices = item.products.map((p) => getPrice(p.price));
+        return Math.min(...prices);
+      };
+
+      const mostExpensive = (item: StandardizedProduct) => {
+        const prices = item.products
+          .map((p) => getPrice(p.price))
+          .filter((p) => p !== Infinity);
+        return prices.length > 0 ? Math.max(...prices) : -Infinity;
+      };
+
+      // biggest discount across stores for a product
+      const biggestDiscount = (item: StandardizedProduct) => {
+        const discounts = item.products.map((p) =>
+          getDiscount(p.discountPercent),
+        );
+        return Math.max(...discounts, 0);
+      };
+
+      list.sort((a, b) => {
+        if (selected === "cheapest") {
+          return cheapest(a) - cheapest(b);
+        }
+
+        if (selected === "expensive") {
+          return mostExpensive(b) - mostExpensive(a); // desc
+        }
+
+        if (selected === "discount") {
+          const dA = biggestDiscount(a);
+          const dB = biggestDiscount(b);
+
+          // bigger discount first
+          if (dB !== dA) return dB - dA;
+
+          // tie-breaker: cheaper first
+          return cheapest(a) - cheapest(b);
+        }
+
+        if (selected === "newest") {
+          const getCreatedAt = (v: unknown): number => {
+            if (!v) return 0;
+            const t = new Date(String(v)).getTime();
+            return Number.isFinite(t) ? t : 0;
+          };
+
+          const newestTime = (item: StandardizedProduct) => {
+            const times = (item.products || []).map((p) =>
+              getCreatedAt((p as any).createdAt),
+            );
+            return times.length ? Math.max(...times) : 0;
+          };
+
+          // newest first
+          return newestTime(b) - newestTime(a);
+        }
+
+        return 0;
+      });
+
+      return list;
+    });
+  }, [selected]);
 
   const onPlus = (id: string) => {
     setQuantities((prev) => ({
@@ -522,8 +624,8 @@ useEffect(() => {
                   <label className="checkBoxLabel">
                     <input
                       type="checkbox"
-                      checked={selected === "new"}
-                      onChange={() => handleCheck("new")}
+                      checked={selected === "newest"}
+                      onChange={() => handleCheck("newest")}
                     ></input>
                     <span className="checkBoxSpan"></span>
                   </label>
@@ -549,10 +651,150 @@ useEffect(() => {
             </div>
           </Modal>
 
-          <button className="filtersBtn">
+          <button className="filtersBtn" onClick={openFilterModal}>
             Filteri
             <img src="./images/downArrowIcon.png" className="downArrowIcon" />
           </button>
+
+          <Modal isOpen={isFilterModalOpen} onClose={closeFilterModal}>
+            <div className="sortModal">
+              <div className="filterHeaderDiv">
+                <h3 className="sortingHeader">Filteri</h3>
+                <button className="closeSortBtn" onClick={closeFilterModal}>
+                  <img
+                    className="closeModalBtn"
+                    src="./images/closeModal.png"
+                  ></img>
+                </button>
+              </div>
+
+              <div className="sortSecondHeader">
+                {/* STORES */}
+                <div
+                  className="filterOptionsDiv"
+                  onClick={() => setOpenStoreFilter((prev) => !prev)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <img src="./images/groceryStore.png" className="sortImg" />
+                  <p className="sortByParagraph">Prodavnica</p>
+                  <img
+                    src="./images/downArrowIcon.png"
+                    className={`downArrowFilterIcon ${openStoreFilter ? "open" : ""}`}
+                  />
+                </div>
+
+                {openStoreFilter && (
+                  <>
+                    <div className="filterStoreOption">
+                      <label className="checkBoxFilterLabel">
+                        <input
+                          type="checkbox"
+                          checked={selectedStores.includes("MAXI")}
+                          onChange={() => toggleStore("MAXI")}
+                        />
+                        <span className="checkBoxSpan"></span>
+                      </label>
+                      <img
+                        src="./images/Maxi.png"
+                        className="filterMaxiImg"
+                        alt="MAXI"
+                      />
+                    </div>
+
+                    <div className="filterStoreOption">
+                      <label className="checkBoxFilterLabel">
+                        <input
+                          type="checkbox"
+                          checked={selectedStores.includes("IDEA")}
+                          onChange={() => toggleStore("IDEA")}
+                        />
+                        <span className="checkBoxSpan"></span>
+                      </label>
+                      <img
+                        src="./images/Idea.png"
+                        className="filterMaxiImg"
+                        alt="IDEA"
+                      />
+                    </div>
+
+                    <div className="filterStoreOption">
+                      <label className="checkBoxFilterLabel">
+                        <input
+                          type="checkbox"
+                          checked={selectedStores.includes("DIS")}
+                          onChange={() => toggleStore("DIS")}
+                        />
+                        <span className="checkBoxSpan"></span>
+                      </label>
+                      <img
+                        src="./images/DIS.png"
+                        className="filterMaxiImg"
+                        alt="DIS"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* VOLUMES */}
+                <div
+  className="filterOptionsDiv"
+  style={{ marginTop: "2vh", cursor: "pointer" }}
+  onClick={() => setOpenVolumeFilter((prev) => !prev)}
+>
+  <img src="./images/weightKg.png" className="sortImg" />
+  <p className="sortByParagraph">Kolicina</p>
+  <img
+    src="./images/downArrowIcon.png"
+    className={`downArrowFilterIcon ${openVolumeFilter ? "open" : ""}`}
+  />
+</div>
+
+                {openVolumeFilter && (
+  <div className="filterVolumeList">
+    {availableVolumes.length === 0 ? (
+      <p style={{ padding: "1vh 0", opacity: 0.7 }}>
+        Nema dostupnih kolicina
+      </p>
+    ) : (
+      availableVolumes.map((vol) => (
+        <div className="filterVolumeOption" key={vol}>
+          <label
+            className="checkBoxFilterLabel"
+            style={{ position: "relative", marginRight: "0vw" }}
+          >
+            <input
+              type="checkbox"
+              checked={selectedVolumes.includes(vol)}
+              onChange={() => toggleVolume(vol)}
+            />
+            <span className="checkBoxSpan"></span>
+          </label>
+          <p style={{ margin: 0 }} className="volumeParagraph">
+            {vol}
+          </p>
+        </div>
+      ))
+    )}
+  </div>
+)}
+
+                {/* BRAND placeholder (you can do same logic later) */}
+                <div className="filterOptionsDiv" style={{ marginTop: "2vh" }}>
+                  <img src="./images/brandIcon.png" className="sortImg"></img>
+                  <p className="sortByParagraph">Brend</p>
+                </div>
+              </div>
+
+              <div className="applySortDiv" style={{ gap: "1vw" }}>
+                <button className="applySortBtn" onClick={clearFilters}>
+                  Resetuj
+                </button>
+                <button className="applySortBtn" onClick={applyFilters}>
+                  Primeni
+                </button>
+              </div>
+            </div>
+          </Modal>
 
           <button className="bestOfferBtn">
             <img src="./images/starMedalIcon.png" className="starMedalIcon" />

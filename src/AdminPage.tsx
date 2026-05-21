@@ -1,131 +1,42 @@
-import React, { useState } from "react";
-import ScrapeButton from "./ScrapeButton";
-import "./Category.css";
+import React from "react";
+import { Link } from "react-router-dom";
 
 function AdminPage() {
-  const [logs, setLogs] = useState<string[]>([]);
-  const [matches, setMatches] = useState<any[]>([]);
-
-  const addLog = (message: string) => {
-    setLogs((prev) => [
-      ...prev,
-      `${new Date().toLocaleTimeString()} — ${message}`,
-    ]);
-  };
-
-  const fetchMatches = async () => {
-    addLog("Fetching matches...");
-    try {
-      const res = await fetch("http://localhost:5000/matches");
-      const data = await res.json();
-      setMatches(data);
-      addLog("Matches fetched.");
-    } catch (err) {
-      addLog("Error fetching matches.");
-      console.error(err);
-    }
-  };
-
-  const confirmMatch = async (
-    productId: number,
-    standardizedProductId: number
-  ) => {
-    addLog(`Confirming match for product ID ${productId}...`);
-    try {
-      const res = await fetch("http://localhost:5000/confirm-match", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, standardizedProductId }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        addLog(data.message);
-        setMatches(matches.filter((m) => m.product.id !== productId)); // remove from list
-      } else {
-        addLog(`Error: ${data.message || data.error}`);
-      }
-    } catch (err) {
-      addLog("Something went wrong while confirming match.");
-      console.error(err);
-    }
-  };
-  function getImageUrl(image: string | null | undefined) {
-    if (!image) return ""; // or a placeholder image URL
-    if (image.startsWith("http")) return image;
-    return `https://online.idea.rs/${image}`;
-  }
-
   return (
-    <>
-      <div className="scrapingLogsDiv">
-        {logs.map((log, index) => (
-          <div key={index}>{log}</div>
-        ))}
-      </div>
+    <div className="adminHub">
+      <h1 className="adminHubTitle">Admin</h1>
+      <p className="adminHubSubtitle">Choose a tool</p>
 
-      <button onClick={fetchMatches}>Fetch Matches</button>
+      <nav className="adminHubGrid" aria-label="Admin sections">
+        <Link to="/admin/matches" className="adminHubCard">
+          <span className="adminHubCardTitle">Similarity matches</span>
+          <span className="adminHubCardDesc">
+            Fetch suggested product ↔ standardized pairs and confirm links.
+          </span>
+        </Link>
 
-      <div className="matchResults">
-        {matches.map((match, index) => (
-          <div key={index} className="matchCard">
-            <div className="standardizedProductDiv">
-              <p className="standardizedProductParagraph">
-                {match.standardizedProduct.brand}{" "}
-                {match.standardizedProduct.name}
-              </p>
-              <img
-                src={match.standardizedProduct.image}
-                className="standardizedProductImage"
-              ></img>
-              <p className="standardizedProductText">standardized</p>
-            </div>
-            <div className="scrapedProductDiv">
-              <p className="scrapedProductParagraph">{match.product.name}</p>
-              <img
-                src={getImageUrl(match.product.image)}
-                alt="Product"
-                className="scrapedProductImage"
-              />
-              <p className="scrapedProductText">scraped</p>
-            </div>
-            <div className="similarityDiv">
-              <p className="similarityValue">
-                {(match.similarity * 100).toFixed(1)}%
-              </p>
-              <p>Similarity</p>
-            </div>
-            <button
-              className="confirmSimilarityBtn"
-              onClick={() =>
-                confirmMatch(match.product.id, match.standardizedProduct.id)
-              }
-            >
-              Confirm
-            </button>
-          </div>
-        ))}
-      </div>
+        <Link to="/admin/receipt-verification" className="adminHubCard">
+          <span className="adminHubCardTitle">Receipt verification</span>
+          <span className="adminHubCardDesc">
+            Review scanned receipts, confirm each item, and finalize receipt validation.
+          </span>
+        </Link>
 
-      <div className="scrapingButtonsDiv">
-        <ScrapeButton
-          label="Scrape Idea"
-          endpoint="scrape-idea"
-          addLog={addLog}
-        />
-        <ScrapeButton
-          label="Scrape Maxi"
-          endpoint="scrape-maxi"
-          addLog={addLog}
-        />
-        <ScrapeButton
-          label="Scrape DIS"
-          endpoint="scrape-dis"
-          addLog={addLog}
-        />
-      </div>
-    </>
+        <Link to="/admin/scrape-stores" className="adminHubCard">
+          <span className="adminHubCardTitle">Quick scrapes</span>
+          <span className="adminHubCardDesc">
+            Run Idea, Maxi, or DIS scrape endpoints from the backend.
+          </span>
+        </Link>
+
+        <Link to="/admin/complete-scrape" className="adminHubCard">
+          <span className="adminHubCardTitle">Complete scrapers</span>
+          <span className="adminHubCardDesc">
+            Full catalog runs, schedule, run history, and logs.
+          </span>
+        </Link>
+      </nav>
+    </div>
   );
 }
 
