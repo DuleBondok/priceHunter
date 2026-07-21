@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiFetch } from "./api";
 
 type StepStatus = "success" | "failed";
 type RunStatus = "running" | "success" | "partial" | "failed";
@@ -48,8 +49,6 @@ type ActiveRun = {
   currentStepLogs: string[];
   completedSteps: ScrapeRunStep[];
 };
-
-const API_BASE = "http://localhost:5000";
 
 const formatTime = (date?: string) =>
   date ? new Date(date).toLocaleString("sr-RS") : "-";
@@ -169,8 +168,8 @@ function ScrapingPage() {
     try {
       setError("");
       const [statusRes, runsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/scraping/status`),
-        fetch(`${API_BASE}/api/scraping/runs`),
+        apiFetch(`/api/scraping/status`),
+        apiFetch(`/api/scraping/runs`),
       ]);
 
       if (!statusRes.ok) {
@@ -206,7 +205,7 @@ function ScrapingPage() {
     try {
       setIsTriggering(true);
       setError("");
-      const res = await fetch(`${API_BASE}/api/scraping/run-now`, {
+      const res = await apiFetch(`/api/scraping/run-now`, {
         method: "POST",
       });
       const data = await readJsonSafely(res);

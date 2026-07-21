@@ -1,4 +1,5 @@
 import React from "react";
+import { API_BASE, apiFetch } from "./api";
 
 type ScrapeButtonProps = {
   label: string;
@@ -8,10 +9,10 @@ type ScrapeButtonProps = {
 
 function ScrapeButton({ label, endpoint, addLog }: ScrapeButtonProps) {
   const handleClick = async () => {
-    addLog(`${label} started (calling http://localhost:5000/api/${endpoint})...`);
+    addLog(`${label} started (calling ${API_BASE}/api/${endpoint})...`);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/${endpoint}`);
+      const res = await apiFetch(`/api/${endpoint}`);
       const rawText = await res.text();
       let data: unknown = null;
       try {
@@ -44,7 +45,7 @@ function ScrapeButton({ label, endpoint, addLog }: ScrapeButtonProps) {
       }
     } catch (err) {
       addLog(
-        `${label} failed — mrežna greška (da li radi backend na portu 5000?).`,
+        `${label} failed — mrežna greška (da li radi backend na ${API_BASE}?).`,
       );
       console.error(err);
     }

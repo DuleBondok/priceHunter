@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiFetch } from "./api";
 import "./Category.css";
 
-function MatchesPage() {
+import { apiFetch } from "./api";
+
+function NewProductsMatchesPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [standardizedMainCategories, setStandardizedMainCategories] = useState<
@@ -11,9 +12,7 @@ function MatchesPage() {
   >([]);
   const [productCategories, setProductCategories] = useState<string[]>([]);
   const [stores, setStores] = useState<string[]>([]);
-  /** Empty string = all categories */
-  const [standardizedMainCategory, setStandardizedMainCategory] =
-    useState("");
+  const [standardizedMainCategory, setStandardizedMainCategory] = useState("");
   const [productCategory, setProductCategory] = useState("");
   const [store, setStore] = useState("");
   const [matchMeta, setMatchMeta] = useState<{
@@ -30,7 +29,7 @@ function MatchesPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch(`/matches/meta`);
+        const res = await apiFetch(`/new-product-matches/meta`);
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
@@ -71,13 +70,14 @@ function MatchesPage() {
       params.set("store", store.trim());
     }
     const qs = params.toString();
-    const url = qs ? `/matches?${qs}` : `/matches`;
+    const url = qs
+      ? `/new-product-matches?${qs}` : `/new-product-matches`;
 
     const spLabel = standardizedMainCategory.trim() || "all";
     const prLabel = productCategory.trim() || "all";
     const storeLabel = store.trim() || "all";
     addLog(
-      `Fetching matches (SP main: ${spLabel}, Product category: ${prLabel}, Store: ${storeLabel})…`,
+      `Fetching NewProducts matches (SP main: ${spLabel}, category: ${prLabel}, store: ${storeLabel})…`,
     );
 
     try {
@@ -113,24 +113,24 @@ function MatchesPage() {
   };
 
   const confirmMatch = async (
-    productId: number,
+    newProductId: number,
     standardizedProductId: number,
   ) => {
-    addLog(`Confirming match for product ID ${productId}...`);
+    addLog(`Confirming match for NewProducts ID ${newProductId}...`);
     try {
-      const res = await apiFetch(`/confirm-match`, {
+      const res = await apiFetch(`/confirm-new-product-match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, standardizedProductId }),
+        body: JSON.stringify({ newProductId, standardizedProductId }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         addLog(data.message);
-        setMatches(matches.filter((m) => m.product.id !== productId));
+        setMatches(matches.filter((m) => m.product.id !== newProductId));
       } else {
-        addLog(`Error: ${data.message || data.error}`);
+        addLog(`Error: ${data.error || data.message}`);
       }
     } catch (err) {
       addLog("Something went wrong while confirming match.");
@@ -150,8 +150,14 @@ function MatchesPage() {
         <Link to="/admin" className="adminBackLink">
           ← Admin
         </Link>
-        <h1>Similarity matches</h1>
+        <h1>NewProducts similarity matches</h1>
       </div>
+
+      <p className="matchesLimitNotice">
+        Pending rows from <code>NewProducts</code> (unprocessed). Confirming a
+        match promotes the row into <code>Product</code>, links it to the
+        standardized product, and removes it from <code>NewProducts</code>.
+      </p>
 
       <div className="matchesFilters">
         <label className="matchesFilterField">
@@ -172,7 +178,7 @@ function MatchesPage() {
           </select>
         </label>
         <label className="matchesFilterField">
-          <span className="matchesFilterLabel">Product category</span>
+          <span className="matchesFilterLabel">NewProducts category</span>
           <select
             className="matchesFilterSelect"
             value={productCategory}
@@ -187,7 +193,7 @@ function MatchesPage() {
           </select>
         </label>
         <label className="matchesFilterField">
-          <span className="matchesFilterLabel">Product store</span>
+          <span className="matchesFilterLabel">Store</span>
           <select
             className="matchesFilterSelect"
             value={store}
@@ -215,7 +221,7 @@ function MatchesPage() {
 
       {matchMeta && (
         <p className="matchesLimitNotice" role="status">
-          {matchMeta.eligible} unmatched products — {matchMeta.withSuggestion}{" "}
+          {matchMeta.eligible} pending NewProducts — {matchMeta.withSuggestion}{" "}
           confident, {matchMeta.weakSuggestion} weak,{" "}
           {matchMeta.withoutSuggestion} no suggestion.
           {matchMeta.truncated &&
@@ -269,7 +275,7 @@ function MatchesPage() {
                 alt="Product"
                 className="scrapedProductImage"
               />
-              <p className="scrapedProductText">scraped</p>
+              <p className="scrapedProductText">NewProducts</p>
             </div>
             <div className="similarityDiv">
               {!match.noSuggestion && (
@@ -312,4 +318,4 @@ function MatchesPage() {
   );
 }
 
-export default MatchesPage;
+export default NewProductsMatchesPage;

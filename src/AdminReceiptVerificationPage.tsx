@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-const API_BASE = "http://localhost:5000";
+import { apiFetch } from "./api";
 
 type ReceiptItem = {
   id: string;
@@ -117,7 +117,7 @@ function AdminReceiptVerificationPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/receipt-scans`);
+      const res = await apiFetch(`/api/admin/receipt-scans`);
       if (!res.ok) {
         throw new Error(`Failed to load receipt scans (${res.status})`);
       }
@@ -197,8 +197,8 @@ function AdminReceiptVerificationPage() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/admin/receipt-scans/${activeReceipt.id}/confirm`,
+      const res = await apiFetch(
+        `/api/admin/receipt-scans/${activeReceipt.id}/confirm`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
