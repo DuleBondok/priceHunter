@@ -3,6 +3,7 @@ import { FiSearch } from "react-icons/fi";
 import Header from "./Header";
 import { Link } from "react-router-dom";
 
+const SearchIcon = FiSearch as unknown as React.FC<{ className?: string }>;
 
 const Homepage = () => {
   return (
@@ -44,7 +45,7 @@ const Homepage = () => {
             </div>
           </div>
           <div className="searchBarMainDiv">
-            <FiSearch className="searchIcon" />
+            <SearchIcon className="searchIcon" />
             <input type="text" className="searchInput" placeholder="Pretraži namirnice"></input>
             <button className="searchBtn">Pretraga</button>
 

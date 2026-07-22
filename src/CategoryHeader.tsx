@@ -5,6 +5,8 @@ import { FiSearch } from "react-icons/fi";
 
 import "./App.css";
 
+const SearchIcon = FiSearch as unknown as React.FC<{ className?: string }>;
+
 const CategoryHeader: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ const CategoryHeader: React.FC = () => {
         />
       </div>
       <div className="headerSearchInputDiv">
-        <FiSearch className="searchIcon" />
+        <SearchIcon className="searchIcon" />
         <input
         type="text"
         placeholder="Pretraži proizvode"

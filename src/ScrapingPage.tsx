@@ -212,10 +212,22 @@ function ScrapingPage() {
       if (!res.ok) {
         throw new Error(data.message || "Run could not be started.");
       }
-      await loadData();
+      // Give the server a moment before polling (scrape starts after HTTP response).
+      await new Promise((r) => setTimeout(r, 800));
+      try {
+        await loadData();
+      } catch {
+        setError(
+          "Run started, but status poll failed (server may be busy or restarting). Click Refresh in a minute.",
+        );
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Unknown error";
-      setError(message);
+      const hint =
+        message === "Failed to fetch"
+          ? " Failed to fetch usually means the Render service crashed (often out of memory when Chrome starts). Check Render logs/metrics."
+          : "";
+      setError(message + hint);
     } finally {
       setIsTriggering(false);
     }
