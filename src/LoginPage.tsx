@@ -59,18 +59,11 @@ function LoginPage() {
   return (
     <div className="adminHub" style={{ maxWidth: 420, margin: "4rem auto" }}>
       <h1 className="adminHubTitle">Admin login</h1>
-      <p className="adminHubSubtitle">
-        Unesi isti token kao <code>ADMIN_API_TOKEN</code> na{" "}
-        <code>pricehunterserver</code> (Render).
-      </p>
-      <p className="adminHubSubtitle" style={{ fontSize: "0.85rem" }}>
-        API: {API_BASE}
-      </p>
       <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem" }}>
         <input
           type="password"
           autoComplete="current-password"
-          placeholder="ADMIN_API_TOKEN"
+          placeholder="Token"
           value={token}
           onChange={(e) => setToken(e.target.value)}
           style={{ padding: "0.65rem 0.75rem", fontSize: "1rem" }}
