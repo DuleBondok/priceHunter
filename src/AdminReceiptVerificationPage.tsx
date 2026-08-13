@@ -11,16 +11,22 @@ type ReceiptItem = {
   confirmed: boolean;
 };
 
+type ReceiptStatus = "pending" | "confirmed" | "rejected" | string;
+
 type ReceiptScan = {
   id: number;
   scannedUrl: string;
   userEmail: string | null;
-  status: "pending" | "confirmed" | string;
+  userId?: string | null;
+  status: ReceiptStatus;
   cartItemsSnapshot: unknown;
   cartTotalSnapshot: number | null;
   itemConfirmations: ReceiptItem[] | null;
   confirmedBy: string | null;
   confirmedAt: string | null;
+  rejectedBy?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
   createdAt: string;
   purchaseGroupId: string | null;
   checkoutStoreLabel: string | null;
@@ -94,13 +100,21 @@ function firstReceiptIdInBlocks(blocks: ListBlock[]): number | null {
   return first.receipts[0]?.id ?? null;
 }
 
+function statusColor(status: string): string {
+  if (status === "confirmed") return "#15803d";
+  if (status === "rejected") return "#b91c1c";
+  return "#6b7280";
+}
+
 function AdminReceiptVerificationPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<ReceiptScan[]>([]);
   const [activeReceiptId, setActiveReceiptId] = useState<number | null>(null);
   const [itemConfirmations, setItemConfirmations] = useState<ReceiptItem[]>([]);
+  const [rejectReason, setRejectReason] = useState("");
 
   const listBlocks = useMemo(() => buildListBlocks(receipts), [receipts]);
 
@@ -156,6 +170,8 @@ function AdminReceiptVerificationPage() {
     [receipts, activeReceiptId]
   );
 
+  const isPending = activeReceipt?.status === "pending";
+
   const groupPeers = useMemo(() => {
     if (!activeReceipt || !activeListBlock || activeListBlock.kind === "single") return [];
     return activeListBlock.receipts
@@ -164,6 +180,8 @@ function AdminReceiptVerificationPage() {
   }, [activeReceipt, activeListBlock]);
 
   useEffect(() => {
+    setRejectReason("");
+    setInfo(null);
     if (!activeReceipt) {
       setItemConfirmations([]);
       return;
@@ -179,6 +197,7 @@ function AdminReceiptVerificationPage() {
   }, [activeReceipt]);
 
   const toggleItem = (id: string) => {
+    if (!isPending || saving) return;
     setItemConfirmations((current) =>
       current.map((item) =>
         item.id === id ? { ...item, confirmed: !item.confirmed } : item
@@ -187,7 +206,7 @@ function AdminReceiptVerificationPage() {
   };
 
   const onConfirmReceipt = async () => {
-    if (!activeReceipt) return;
+    if (!activeReceipt || !isPending) return;
     if (
       itemConfirmations.length === 0 ||
       !itemConfirmations.some((i) => i.confirmed)
@@ -196,6 +215,7 @@ function AdminReceiptVerificationPage() {
     }
     setSaving(true);
     setError(null);
+    setInfo(null);
     try {
       const res = await apiFetch(
         `/api/admin/receipt-scans/${activeReceipt.id}/confirm`,
@@ -212,6 +232,54 @@ function AdminReceiptVerificationPage() {
         const payload = (await res.json().catch(() => ({}))) as { message?: string };
         throw new Error(payload.message ?? `Confirm failed (${res.status})`);
       }
+      const payload = (await res.json().catch(() => ({}))) as {
+        pointsAwarded?: number;
+        balance?: number;
+      };
+      if (typeof payload.pointsAwarded === "number" && payload.pointsAwarded > 0) {
+        setInfo(
+          `Confirmed. Awarded +${payload.pointsAwarded} points` +
+            (typeof payload.balance === "number" ? ` (balance ${payload.balance}).` : ".")
+        );
+      } else {
+        setInfo("Receipt confirmed.");
+      }
+      await loadReceipts();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onRejectReceipt = async () => {
+    if (!activeReceipt || !isPending) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      setError("Rejection reason is required.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const res = await apiFetch(
+        `/api/admin/receipt-scans/${activeReceipt.id}/reject`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rejectedBy: "admin@pricehunter.local",
+            reason,
+          }),
+        }
+      );
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { message?: string };
+        throw new Error(payload.message ?? `Reject failed (${res.status})`);
+      }
+      setInfo("Receipt rejected.");
+      setRejectReason("");
       await loadReceipts();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -222,14 +290,17 @@ function AdminReceiptVerificationPage() {
 
   const confirmedCount = itemConfirmations.filter((i) => i.confirmed).length;
   const atLeastOneItemConfirmed = itemConfirmations.some((i) => i.confirmed);
-  const canConfirmReceipt = atLeastOneItemConfirmed && !saving;
+  const canConfirmReceipt = isPending && atLeastOneItemConfirmed && !saving;
+  const canRejectReceipt = isPending && !saving && rejectReason.trim().length > 0;
 
   const groupProgress = useMemo(() => {
     if (!activeListBlock || activeListBlock.kind === "single") return null;
     const entries = activeListBlock.receipts;
     if (entries.length < 2) return null;
     const confirmed = entries.filter((r) => r.status === "confirmed").length;
-    return { confirmed, total: entries.length };
+    const rejected = entries.filter((r) => r.status === "rejected").length;
+    const pending = entries.filter((r) => r.status === "pending").length;
+    return { confirmed, rejected, pending, total: entries.length };
   }, [activeListBlock]);
 
   return (
@@ -241,10 +312,15 @@ function AdminReceiptVerificationPage() {
         <h1>Receipt verification</h1>
       </div>
 
+      {error ? (
+        <p style={{ color: "#b91c1c", marginBottom: 12 }}>{error}</p>
+      ) : null}
+      {info ? (
+        <p style={{ color: "#15803d", marginBottom: 12 }}>{info}</p>
+      ) : null}
+
       {loading ? (
         <p>Loading receipts…</p>
-      ) : error ? (
-        <p style={{ color: "#b91c1c" }}>{error}</p>
       ) : receipts.length === 0 ? (
         <p>No receipt scans yet.</p>
       ) : (
@@ -271,7 +347,7 @@ function AdminReceiptVerificationPage() {
                   >
                     <div style={{ fontWeight: 700 }}>#{receipt.id}</div>
                     <div style={{ fontSize: 13 }}>{receipt.userEmail ?? "unknown user"}</div>
-                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                    <div style={{ fontSize: 12, color: statusColor(receipt.status) }}>
                       {receipt.status.toUpperCase()} ·{" "}
                       {new Date(receipt.createdAt).toLocaleString()}
                     </div>
@@ -279,7 +355,7 @@ function AdminReceiptVerificationPage() {
                 );
               }
 
-              const pending = block.receipts.filter((r) => r.status !== "confirmed").length;
+              const pending = block.receipts.filter((r) => r.status === "pending").length;
               return (
                 <div
                   key={`g-${block.purchaseGroupId}`}
@@ -309,7 +385,7 @@ function AdminReceiptVerificationPage() {
                   </div>
                   <div style={{ fontSize: 11, color: "#b45309", marginBottom: 8 }}>
                     {pending === 0
-                      ? "All scans in this group are confirmed."
+                      ? "No pending scans left in this group."
                       : `${pending} receipt${pending === 1 ? "" : "s"} still pending.`}
                   </div>
                   {block.receipts.map((receipt) => (
@@ -334,7 +410,7 @@ function AdminReceiptVerificationPage() {
                           ? ` · ${receipt.checkoutStoreLabel}`
                           : ""}
                       </div>
-                      <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      <div style={{ fontSize: 12, color: statusColor(receipt.status) }}>
                         {receipt.status.toUpperCase()} ·{" "}
                         {new Date(receipt.createdAt).toLocaleString()}
                       </div>
@@ -362,14 +438,15 @@ function AdminReceiptVerificationPage() {
                   </div>
                   <p style={{ margin: "0 0 8px", fontSize: 14, color: "#1f2937", lineHeight: 1.5 }}>
                     This receipt is one of <b>{groupProgress.total}</b> scans in the same checkout
-                    session. Each physical receipt must be reviewed and confirmed on its own.
+                    session. Each physical receipt must be reviewed on its own.
                   </p>
                   <p style={{ margin: "0 0 8px", fontSize: 13, color: "#374151" }}>
-                    Progress in this group:{" "}
+                    Progress:{" "}
                     <b>
-                      {groupProgress.confirmed}/{groupProgress.total}
+                      {groupProgress.confirmed} confirmed / {groupProgress.rejected} rejected /{" "}
+                      {groupProgress.pending} pending
                     </b>{" "}
-                    confirmed.
+                    of {groupProgress.total}.
                   </p>
                   {groupPeers.length > 0 ? (
                     <div style={{ fontSize: 13 }}>
@@ -403,6 +480,12 @@ function AdminReceiptVerificationPage() {
               ) : null}
 
               <h3 style={{ marginTop: 0, marginBottom: 10 }}>Receipt #{activeReceipt.id}</h3>
+              <p style={{ margin: "0 0 6px" }}>
+                Status:{" "}
+                <b style={{ color: statusColor(activeReceipt.status) }}>
+                  {activeReceipt.status.toUpperCase()}
+                </b>
+              </p>
               {activeReceipt.checkoutStoreLabel ? (
                 <p style={{ margin: "0 0 6px" }}>
                   Store (from app): <b>{activeReceipt.checkoutStoreLabel}</b>
@@ -410,6 +493,9 @@ function AdminReceiptVerificationPage() {
               ) : null}
               <p style={{ margin: "0 0 6px" }}>
                 User: <b>{activeReceipt.userEmail ?? "unknown"}</b>
+                {activeReceipt.userId ? (
+                  <span style={{ fontSize: 12, color: "#6b7280" }}> · {activeReceipt.userId}</span>
+                ) : null}
               </p>
               <p style={{ margin: "0 0 6px" }}>
                 Total snapshot:{" "}
@@ -421,6 +507,35 @@ function AdminReceiptVerificationPage() {
                   {activeReceipt.scannedUrl}
                 </a>
               </p>
+
+              {activeReceipt.status === "rejected" && activeReceipt.rejectionReason ? (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 10,
+                    borderRadius: 8,
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#991b1b",
+                    fontSize: 14,
+                  }}
+                >
+                  <b>Rejection reason:</b> {activeReceipt.rejectionReason}
+                  {activeReceipt.rejectedAt ? (
+                    <div style={{ fontSize: 12, marginTop: 4 }}>
+                      {new Date(activeReceipt.rejectedAt).toLocaleString()}
+                      {activeReceipt.rejectedBy ? ` · ${activeReceipt.rejectedBy}` : ""}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {activeReceipt.status === "confirmed" && activeReceipt.confirmedAt ? (
+                <p style={{ margin: "0 0 10px", fontSize: 13, color: "#15803d" }}>
+                  Confirmed {new Date(activeReceipt.confirmedAt).toLocaleString()}
+                  {activeReceipt.confirmedBy ? ` · ${activeReceipt.confirmedBy}` : ""}
+                </p>
+              ) : null}
 
               <p style={{ marginTop: 0, marginBottom: 8, fontWeight: 700 }}>
                 Confirm items ({confirmedCount}/{itemConfirmations.length})
@@ -438,11 +553,13 @@ function AdminReceiptVerificationPage() {
                       padding: 10,
                       marginBottom: 8,
                       background: item.confirmed ? "#f0fdf4" : "#fff",
+                      opacity: isPending ? 1 : 0.75,
                     }}
                   >
                     <input
                       type="checkbox"
                       checked={item.confirmed}
+                      disabled={!isPending || saving}
                       onChange={() => toggleItem(item.id)}
                     />
                     <div>
@@ -455,18 +572,61 @@ function AdminReceiptVerificationPage() {
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={onConfirmReceipt}
-                disabled={!canConfirmReceipt}
-                title={
-                  atLeastOneItemConfirmed
-                    ? undefined
-                    : "Confirm at least one item before confirming the receipt."
-                }
-              >
-                {saving ? "Confirming…" : "Confirm receipt"}
-              </button>
+              {isPending ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={onConfirmReceipt}
+                    disabled={!canConfirmReceipt}
+                    title={
+                      atLeastOneItemConfirmed
+                        ? undefined
+                        : "Confirm at least one item before confirming the receipt."
+                    }
+                  >
+                    {saving ? "Saving…" : "Confirm receipt"}
+                  </button>
+
+                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #e5e7eb" }}>
+                    <label style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                      Reject receipt
+                    </label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Reason for rejection (required)"
+                      rows={3}
+                      disabled={saving}
+                      style={{
+                        width: "100%",
+                        boxSizing: "border-box",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 8,
+                        padding: 10,
+                        fontSize: 14,
+                        resize: "vertical",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={onRejectReceipt}
+                      disabled={!canRejectReceipt}
+                      style={{
+                        marginTop: 8,
+                        background: "#fee2e2",
+                        color: "#b91c1c",
+                        border: "1px solid #fecaca",
+                      }}
+                    >
+                      {saving ? "Saving…" : "Reject receipt"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p style={{ color: "#6b7280", fontSize: 14 }}>
+                  This receipt is already {activeReceipt.status}. No further action available.
+                </p>
+              )}
             </div>
           ) : null}
         </div>

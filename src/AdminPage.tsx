@@ -46,7 +46,8 @@ function AdminPage() {
         <Link to="/admin/receipt-verification" className="adminHubCard">
           <span className="adminHubCardTitle">Receipt verification</span>
           <span className="adminHubCardDesc">
-            Review scanned receipts, confirm each item, and finalize receipt validation.
+            Review scanned receipts, confirm purchased items, reject invalid scans, and award
+            points on confirm.
           </span>
         </Link>
 
