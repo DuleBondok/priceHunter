@@ -1,84 +1,101 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { clearAdminToken } from "./api";
+import { Link } from "react-router-dom";
+import {
+  FiCheckSquare,
+  FiClock,
+  FiCopy,
+  FiImage,
+  FiLink,
+  FiPackage,
+  FiPlayCircle,
+} from "react-icons/fi";
+
+const TOOLS: Array<{
+  to: string;
+  title: string;
+  desc: string;
+  tone: "coral" | "teal" | "amber" | "sky" | "rose" | "lime" | "slate";
+  icon: React.ComponentType<{ size?: number }>;
+}> = [
+  {
+    to: "/admin/matches",
+    title: "Similarity matches",
+    desc: "Fetch suggested product ↔ standardized pairs and confirm links.",
+    tone: "coral",
+    icon: FiLink,
+  },
+  {
+    to: "/admin/new-product-matches",
+    title: "NewProducts matches",
+    desc: "Match pending NewProducts rows, promote to Product, and link.",
+    tone: "teal",
+    icon: FiPackage,
+  },
+  {
+    to: "/admin/receipt-verification",
+    title: "Receipt verification",
+    desc: "Confirm purchased items, reject invalid scans, award points.",
+    tone: "lime",
+    icon: FiCheckSquare,
+  },
+  {
+    to: "/admin/scrape-stores",
+    title: "Quick scrapes",
+    desc: "Run Idea, Maxi, or DIS scrape endpoints from the backend.",
+    tone: "amber",
+    icon: FiPlayCircle,
+  },
+  {
+    to: "/admin/complete-scrape",
+    title: "Complete scrapers",
+    desc: "Full catalog runs, schedule, run history, and logs.",
+    tone: "sky",
+    icon: FiClock,
+  },
+  {
+    to: "/admin/image-manager",
+    title: "Image Manager",
+    desc: "Search products and replace images on Cloudflare.",
+    tone: "rose",
+    icon: FiImage,
+  },
+  {
+    to: "/admin/duplicate-store-links",
+    title: "Duplicate store links",
+    desc: "Find bad multi-links for the same store, then unlink or delete.",
+    tone: "slate",
+    icon: FiCopy,
+  },
+];
 
 function AdminPage() {
-  const navigate = useNavigate();
-
-  const logout = () => {
-    clearAdminToken();
-    navigate("/login", { replace: true });
-  };
-
   return (
     <div className="adminHub">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          gap: "1rem",
-        }}
-      >
-        <h1 className="adminHubTitle">Admin</h1>
-        <button type="button" onClick={logout} className="adminBackLink">
-          Logout
-        </button>
-      </div>
-      <p className="adminHubSubtitle">Choose a tool</p>
+      <header className="adminHubHeader">
+        <p className="adminHubEyebrow">Pricely ops</p>
+        <h1 className="adminHubTitle">Overview</h1>
+        <p className="adminHubSubtitle">
+          Use the sidebar for every tool. Shortcuts below open the same pages.
+        </p>
+      </header>
 
-      <nav className="adminHubGrid" aria-label="Admin sections">
-        <Link to="/admin/matches" className="adminHubCard">
-          <span className="adminHubCardTitle">Similarity matches</span>
-          <span className="adminHubCardDesc">
-            Fetch suggested product ↔ standardized pairs and confirm links.
-          </span>
-        </Link>
-
-        <Link to="/admin/new-product-matches" className="adminHubCard">
-          <span className="adminHubCardTitle">NewProducts matches</span>
-          <span className="adminHubCardDesc">
-            Match pending NewProducts rows, promote to Product, and link to
-            StandardizedProduct.
-          </span>
-        </Link>
-
-        <Link to="/admin/receipt-verification" className="adminHubCard">
-          <span className="adminHubCardTitle">Receipt verification</span>
-          <span className="adminHubCardDesc">
-            Review scanned receipts, confirm purchased items, reject invalid scans, and award
-            points on confirm.
-          </span>
-        </Link>
-
-        <Link to="/admin/scrape-stores" className="adminHubCard">
-          <span className="adminHubCardTitle">Quick scrapes</span>
-          <span className="adminHubCardDesc">
-            Run Idea, Maxi, or DIS scrape endpoints from the backend.
-          </span>
-        </Link>
-
-        <Link to="/admin/complete-scrape" className="adminHubCard">
-          <span className="adminHubCardTitle">Complete scrapers</span>
-          <span className="adminHubCardDesc">
-            Full catalog runs, schedule, run history, and logs.
-          </span>
-        </Link>
-
-        <Link to="/admin/image-manager" className="adminHubCard">
-          <span className="adminHubCardTitle">Image Manager</span>
-          <span className="adminHubCardDesc">
-            Pretraži proizvode i zameni slike direktno na Cloudflare.
-          </span>
-        </Link>
-
-        <Link to="/admin/duplicate-store-links" className="adminHubCard">
-          <span className="adminHubCardTitle">Duplicate store links</span>
-          <span className="adminHubCardDesc">
-            Find StandardizedProducts linked to multiple Products from the same
-            store, then unlink or delete the wrong ones.
-          </span>
-        </Link>
+      <nav className="adminHubGrid" aria-label="Admin shortcuts">
+        {TOOLS.map((tool) => {
+          const Icon = tool.icon;
+          return (
+            <Link
+              key={tool.to}
+              to={tool.to}
+              className={`adminHubCard adminHubCard--${tool.tone}`}
+            >
+              <span className="adminHubCardIcon" aria-hidden>
+                <Icon size={20} />
+              </span>
+              <span className="adminHubCardTitle">{tool.title}</span>
+              <span className="adminHubCardDesc">{tool.desc}</span>
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );

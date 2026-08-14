@@ -57,29 +57,26 @@ function LoginPage() {
   };
 
   return (
-    <div className="adminHub" style={{ maxWidth: 420, margin: "4rem auto" }}>
-      <h1 className="adminHubTitle">Admin login</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem" }}>
-        <input
-          type="password"
-          autoComplete="current-password"
-          placeholder="Token"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          style={{ padding: "0.65rem 0.75rem", fontSize: "1rem" }}
-        />
-        {error ? (
-          <p style={{ color: "#b00020", margin: 0 }}>{error}</p>
-        ) : null}
-        <button
-          type="submit"
-          className="adminHubCard"
-          style={{ cursor: "pointer" }}
-          disabled={loading}
-        >
-          {loading ? "Provera…" : "Uloguj se"}
-        </button>
-      </form>
+    <div className="adminLoginPage">
+      <div className="adminLoginCard">
+        <p className="adminHubEyebrow">Pricely</p>
+        <h1 className="adminHubTitle">Admin login</h1>
+        <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.75rem" }}>
+          <input
+            type="password"
+            autoComplete="current-password"
+            placeholder="ADMIN_API_TOKEN"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+          />
+          {error ? (
+            <p style={{ color: "#b00020", margin: 0 }}>{error}</p>
+          ) : null}
+          <button type="submit" className="adminLoginSubmit" disabled={loading}>
+            {loading ? "Provera…" : "Uloguj se"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

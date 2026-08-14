@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import AdminLayout from "./AdminLayout";
 import AdminPage from "./AdminPage";
 import MatchesPage from "./MatchesPage";
 import NewProductsMatchesPage from "./NewProductsMatchesPage";
@@ -26,66 +27,19 @@ function App() {
           path="/admin"
           element={
             <RequireAuth>
-              <AdminPage />
+              <AdminLayout />
             </RequireAuth>
           }
-        />
-        <Route
-          path="/admin/matches"
-          element={
-            <RequireAuth>
-              <MatchesPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/new-product-matches"
-          element={
-            <RequireAuth>
-              <NewProductsMatchesPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/receipt-verification"
-          element={
-            <RequireAuth>
-              <AdminReceiptVerificationPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/scrape-stores"
-          element={
-            <RequireAuth>
-              <IndividualScrapePage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/complete-scrape"
-          element={
-            <RequireAuth>
-              <ScrapingPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/image-manager"
-          element={
-            <RequireAuth>
-              <ImageManagerPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/duplicate-store-links"
-          element={
-            <RequireAuth>
-              <DuplicateStoreLinksPage />
-            </RequireAuth>
-          }
-        />
+        >
+          <Route index element={<AdminPage />} />
+          <Route path="matches" element={<MatchesPage />} />
+          <Route path="new-product-matches" element={<NewProductsMatchesPage />} />
+          <Route path="receipt-verification" element={<AdminReceiptVerificationPage />} />
+          <Route path="scrape-stores" element={<IndividualScrapePage />} />
+          <Route path="complete-scrape" element={<ScrapingPage />} />
+          <Route path="image-manager" element={<ImageManagerPage />} />
+          <Route path="duplicate-store-links" element={<DuplicateStoreLinksPage />} />
+        </Route>
         <Route
           path="/scraping"
           element={<Navigate to="/admin/complete-scrape" replace />}
