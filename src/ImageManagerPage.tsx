@@ -800,6 +800,14 @@ function ImageManagerPage() {
 
           {searchError && <p className="imageManagerError">{searchError}</p>}
 
+          {!searching && products.length > 0 && (
+            <p className="imageManagerEmpty" style={{ marginBottom: 8 }}>
+              {products.length} proizvoda
+              {selectedCategory ? ` · ${selectedCategory}` : ""}
+              {selectedBrand ? ` · ${selectedBrand}` : ""}
+            </p>
+          )}
+
           {!searching && products.length === 0 && (
             <p className="imageManagerEmpty">Nema rezultata.</p>
           )}
