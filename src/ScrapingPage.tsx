@@ -5,8 +5,16 @@ import { apiFetch } from "./api";
 type StepStatus = "success" | "failed";
 type RunStatus = "running" | "success" | "partial" | "failed";
 
+type ScrapeStore =
+  | "Idea"
+  | "Maxi"
+  | "DIS"
+  | "Univerexport"
+  | "AS"
+  | "Zlatan Trag";
+
 type ScrapeRunStep = {
-  store: "Idea" | "Maxi" | "DIS";
+  store: ScrapeStore;
   startedAt: string;
   finishedAt: string;
   durationMs: number;
@@ -39,16 +47,35 @@ type ScrapeRun = {
   };
 };
 
+type ScrapeProblem = {
+  runId: string;
+  trigger: "manual" | "scheduled";
+  store: ScrapeStore;
+  status: string;
+  finishedAt?: string;
+  errorMessage: string;
+};
+
 type ActiveRun = {
   runId: string;
   trigger: "manual" | "scheduled";
   startedAt: string;
-  currentStore?: "Idea" | "Maxi" | "DIS";
+  currentStore?: ScrapeStore;
   currentCommand?: string;
   currentStepStartedAt?: string;
   currentStepLogs: string[];
   completedSteps: ScrapeRunStep[];
+  plannedStores?: ScrapeStore[];
 };
+
+const DEFAULT_STORES: ScrapeStore[] = [
+  "Idea",
+  "Maxi",
+  "DIS",
+  "Univerexport",
+  "AS",
+  "Zlatan Trag",
+];
 
 const formatTime = (date?: string) =>
   date ? new Date(date).toLocaleString("sr-RS") : "-";
@@ -133,6 +160,21 @@ function deriveFinalInfoFromLogs(step: ScrapeRunStep): {
     if (maxiTotal) info.scraped = Number(maxiTotal[1]);
   }
 
+  if (info.scraped == null) {
+    const uni = text.match(/\[Univerexport\]\s*Total collected:\s*(\d+)/i);
+    if (uni) info.scraped = Number(uni[1]);
+  }
+
+  if (info.scraped == null) {
+    const as = text.match(/\[AS\]\s*Total collected:\s*(\d+)/i);
+    if (as) info.scraped = Number(as[1]);
+  }
+
+  if (info.scraped == null) {
+    const zt = text.match(/\[Zlatan Trag\]\s*Total collected:\s*(\d+)/i);
+    if (zt) info.scraped = Number(zt[1]);
+  }
+
   return info;
 }
 
@@ -141,9 +183,13 @@ function ScrapingPage() {
   const [selectedRunId, setSelectedRunId] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
   const [scheduled, setScheduled] = useState("");
+  const [stores, setStores] = useState<ScrapeStore[]>(DEFAULT_STORES);
   const [activeRun, setActiveRun] = useState<ActiveRun | null>(null);
+  const [recentProblems, setRecentProblems] = useState<ScrapeProblem[]>([]);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isTriggering, setIsTriggering] = useState(false);
+  const [triggeringStore, setTriggeringStore] = useState<string | null>(null);
 
   const selectedRun = useMemo(
     () => runs.find((run) => run.id === selectedRunId) ?? runs[0],
@@ -187,8 +233,21 @@ function ScrapingPage() {
       setIsRunning(Boolean(statusData.isRunning));
       setScheduled(String(statusData.scheduled ?? ""));
       setActiveRun(statusData.activeRun ?? null);
-      setRuns(Array.isArray(runsData.runs) ? runsData.runs : []);
-      setSelectedRunId((prev) => prev || runsData.runs?.[0]?.id || "");
+      setRecentProblems(
+        Array.isArray(statusData.recentProblems) ? statusData.recentProblems : [],
+      );
+      if (Array.isArray(statusData.stores) && statusData.stores.length > 0) {
+        setStores(
+          statusData.stores.map(
+            (s: { store: ScrapeStore }) => s.store,
+          ) as ScrapeStore[],
+        );
+      }
+      const nextRuns: ScrapeRun[] = Array.isArray(runsData.runs)
+        ? runsData.runs
+        : [];
+      setRuns(nextRuns);
+      setSelectedRunId((prev) => prev || nextRuns[0]?.id || "");
     } catch (e) {
       const message = e instanceof Error ? e.message : "Unknown error";
       setError(message);
@@ -197,22 +256,28 @@ function ScrapingPage() {
 
   useEffect(() => {
     loadData();
-    const timer = setInterval(loadData, 15000);
+    const timer = setInterval(loadData, 10000);
     return () => clearInterval(timer);
   }, [loadData]);
 
-  const handleRunNow = async () => {
+  const startRun = async (store?: ScrapeStore) => {
     try {
       setIsTriggering(true);
+      setTriggeringStore(store ?? "all");
       setError("");
+      setNotice("");
       const res = await apiFetch(`/api/scraping/run-now`, {
         method: "POST",
+        body: JSON.stringify(store ? { store } : {}),
       });
       const data = await readJsonSafely(res);
       if (!res.ok) {
         throw new Error(data.message || "Run could not be started.");
       }
-      // Give the server a moment before polling (scrape starts after HTTP response).
+      const labels = Array.isArray(data.stores)
+        ? data.stores.join(", ")
+        : store || "all stores";
+      setNotice(`Pokrenuto: ${labels}`);
       await new Promise((r) => setTimeout(r, 800));
       try {
         await loadData();
@@ -230,8 +295,14 @@ function ScrapingPage() {
       setError(message + hint);
     } finally {
       setIsTriggering(false);
+      setTriggeringStore(null);
     }
   };
+
+  const plannedCount =
+    activeRun?.plannedStores?.length ??
+    activeRun?.completedSteps.length ??
+    stores.length;
 
   return (
     <div className="scrapingPage">
@@ -243,18 +314,22 @@ function ScrapingPage() {
       <div className="scrapingTopBar">
         <div>
           <h1>Complete scrapers</h1>
-          <p className="scrapingSubInfo">Schedule: {scheduled || "Not configured"}</p>
+          <p className="scrapingSubInfo">
+            Schedule: {scheduled || "Not configured"}
+          </p>
           <p className={`scrapingStatus ${isRunning ? "running" : "idle"}`}>
             {isRunning ? "Run in progress" : "Idle"}
           </p>
         </div>
         <div className="scrapingActions">
           <button
-            onClick={handleRunNow}
+            onClick={() => startRun()}
             disabled={isTriggering || isRunning}
             className="scrapingActionBtn"
           >
-            {isTriggering ? "Starting..." : "Run now"}
+            {isTriggering && triggeringStore === "all"
+              ? "Starting..."
+              : "Run all now"}
           </button>
           <button onClick={loadData} className="scrapingRefreshBtn">
             Refresh
@@ -262,13 +337,56 @@ function ScrapingPage() {
         </div>
       </div>
 
+      <div className="scrapingStoreActions">
+        <h3>Run one store</h3>
+        <div className="scrapingStoreButtons">
+          {stores.map((store) => (
+            <button
+              key={store}
+              className="scrapingStoreBtn"
+              disabled={isTriggering || isRunning}
+              onClick={() => startRun(store)}
+              title={`Pokreni samo ${store}`}
+            >
+              {isTriggering && triggeringStore === store
+                ? `Starting ${store}…`
+                : store}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {error ? <div className="scrapingError">{error}</div> : null}
+      {notice ? <div className="scrapingNotice">{notice}</div> : null}
+
+      {recentProblems.length > 0 ? (
+        <div className="scrapingProblems">
+          <h3>Nedavni problemi</h3>
+          <ul>
+            {recentProblems.slice(0, 8).map((p, idx) => (
+              <li key={`${p.runId}-${p.store}-${idx}`}>
+                <button
+                  type="button"
+                  className="scrapingProblemLink"
+                  onClick={() => setSelectedRunId(p.runId)}
+                >
+                  <strong>{p.store}</strong>
+                  <span>
+                    {p.trigger} · {formatTime(p.finishedAt)}
+                  </span>
+                  <span className="scrapingProblemMsg">{p.errorMessage}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="scrapingContent">
         <div className="scrapingRunList">
           <h3>Recent runs</h3>
           {runs.length === 0 ? (
-            <p>No runs yet.</p>
+            <p>No runs yet. History is stored in Neon after this deploy.</p>
           ) : (
             runs.map((run) => (
               <button
@@ -277,8 +395,16 @@ function ScrapingPage() {
                 onClick={() => setSelectedRunId(run.id)}
               >
                 <div>
-                  <strong>{run.trigger === "manual" ? "Manual" : "Scheduled"}</strong>
+                  <strong>
+                    {run.trigger === "manual" ? "Manual" : "Scheduled"}
+                    {run.steps.length === 1 ? ` · ${run.steps[0].store}` : ""}
+                  </strong>
                   <p>{formatTime(run.startedAt)}</p>
+                  {run.summary.failedSteps > 0 ? (
+                    <p className="scrapingRunFailHint">
+                      {run.summary.failedSteps} failed
+                    </p>
+                  ) : null}
                 </div>
                 <span className={`runBadge ${run.status}`}>{run.status}</span>
               </button>
@@ -297,10 +423,25 @@ function ScrapingPage() {
               <p>Store in progress: {activeRun.currentStore || "-"}</p>
               <p>Step started: {formatTime(activeRun.currentStepStartedAt)}</p>
               <p className="mono">{activeRun.currentCommand || ""}</p>
-              <p>Completed steps: {activeRun.completedSteps.length}/3</p>
+              <p>
+                Completed steps: {activeRun.completedSteps.length}/{plannedCount}
+              </p>
+              {activeRun.completedSteps.some((s) => s.status === "failed") ? (
+                <p className="stepError">
+                  Problem so far:{" "}
+                  {activeRun.completedSteps
+                    .filter((s) => s.status === "failed")
+                    .map((s) => s.store)
+                    .join(", ")}
+                </p>
+              ) : null}
               <details open>
-                <summary>Live logs ({activeRun.currentStepLogs.length})</summary>
-                <pre className="stepLogs">{activeRun.currentStepLogs.join("\n")}</pre>
+                <summary>
+                  Live logs ({activeRun.currentStepLogs.length})
+                </summary>
+                <pre className="stepLogs">
+                  {activeRun.currentStepLogs.join("\n")}
+                </pre>
               </details>
             </div>
           ) : null}
@@ -313,7 +454,11 @@ function ScrapingPage() {
                 <p>Started: {formatTime(selectedRun.startedAt)}</p>
                 <p>Finished: {formatTime(selectedRun.finishedAt)}</p>
                 <p>
-                  Steps: {selectedRun.summary.successfulSteps}/{selectedRun.summary.totalSteps} successful
+                  Steps: {selectedRun.summary.successfulSteps}/
+                  {selectedRun.summary.totalSteps} successful
+                  {selectedRun.summary.failedSteps > 0
+                    ? ` · ${selectedRun.summary.failedSteps} failed`
+                    : ""}
                 </p>
                 {runPriceClearedTotal != null ? (
                   <p>
@@ -324,32 +469,51 @@ function ScrapingPage() {
               </div>
 
               {selectedRun.steps.map((step, idx) => (
-                <div key={`${selectedRun.id}-${step.store}-${idx}`} className="stepCard">
+                <div
+                  key={`${selectedRun.id}-${step.store}-${idx}`}
+                  className={`stepCard ${step.status === "failed" ? "stepCardFailed" : ""}`}
+                >
                   {(() => {
                     const finalInfo = deriveFinalInfoFromLogs(step);
                     return (
                       <>
-                  <div className="stepHeader">
-                    <h4>{step.store}</h4>
-                    <span className={`runBadge ${step.status}`}>{step.status}</span>
-                  </div>
-                  <div className="finalInfoRow">
-                    <p><strong>Scraped:</strong> {finalInfo.scraped ?? "-"}</p>
-                    <p><strong>Created:</strong> {finalInfo.created ?? "-"}</p>
-                    <p><strong>Updated:</strong> {finalInfo.updated ?? "-"}</p>
-                    <p><strong>Price cleared:</strong> {finalInfo.priceCleared ?? "-"}</p>
-                    <p><strong>Total in DB:</strong> {finalInfo.totalInDb ?? "-"}</p>
-                  </div>
-                  <p>Duration: {(step.durationMs / 1000).toFixed(1)}s</p>
-                  <p>Exit code: {step.exitCode}</p>
-                  <p className="mono">{step.command}</p>
-                  {step.errorMessage ? (
-                    <p className="stepError">Error: {step.errorMessage}</p>
-                  ) : null}
-                  <details>
-                    <summary>Logs ({step.logs.length})</summary>
-                    <pre className="stepLogs">{step.logs.join("\n")}</pre>
-                  </details>
+                        <div className="stepHeader">
+                          <h4>{step.store}</h4>
+                          <span className={`runBadge ${step.status}`}>
+                            {step.status}
+                          </span>
+                        </div>
+                        <div className="finalInfoRow">
+                          <p>
+                            <strong>Scraped:</strong> {finalInfo.scraped ?? "-"}
+                          </p>
+                          <p>
+                            <strong>Created:</strong> {finalInfo.created ?? "-"}
+                          </p>
+                          <p>
+                            <strong>Updated:</strong> {finalInfo.updated ?? "-"}
+                          </p>
+                          <p>
+                            <strong>Price cleared:</strong>{" "}
+                            {finalInfo.priceCleared ?? "-"}
+                          </p>
+                          <p>
+                            <strong>Total in DB:</strong>{" "}
+                            {finalInfo.totalInDb ?? "-"}
+                          </p>
+                        </div>
+                        <p>Duration: {(step.durationMs / 1000).toFixed(1)}s</p>
+                        <p>Exit code: {step.exitCode}</p>
+                        <p className="mono">{step.command}</p>
+                        {step.errorMessage ? (
+                          <p className="stepError">Error: {step.errorMessage}</p>
+                        ) : null}
+                        <details open={step.status === "failed"}>
+                          <summary>Logs ({step.logs.length})</summary>
+                          <pre className="stepLogs">
+                            {step.logs.join("\n")}
+                          </pre>
+                        </details>
                       </>
                     );
                   })()}

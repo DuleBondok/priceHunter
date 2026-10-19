@@ -1087,6 +1087,108 @@
   color: #991b1b;
 }
 
+.scrapingNotice {
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.scrapingStoreActions {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.scrapingStoreActions h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.scrapingStoreButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scrapingStoreBtn {
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 12px;
+  cursor: pointer;
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.scrapingStoreBtn:hover:not(:disabled) {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.scrapingStoreBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scrapingProblems {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff7ed;
+}
+
+.scrapingProblems h3 {
+  margin: 0 0 8px;
+  color: #9a3412;
+  font-size: 14px;
+}
+
+.scrapingProblems ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.scrapingProblemLink {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #fed7aa;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+}
+
+.scrapingProblemLink span {
+  color: #78716c;
+  font-size: 12px;
+}
+
+.scrapingProblemMsg {
+  color: #9a3412 !important;
+  font-size: 13px !important;
+}
+
+.scrapingRunFailHint {
+  margin: 2px 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.stepCardFailed {
+  border-color: #fca5a5 !important;
+  background: #fff1f2;
+}
+
 .scrapingContent {
   display: grid;
   grid-template-columns: 320px 1fr;

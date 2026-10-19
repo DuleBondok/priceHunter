@@ -48,7 +48,7 @@ const TOOLS: Array<{
   {
     to: "/admin/complete-scrape",
     title: "Complete scrapers",
-    desc: "Full catalog runs, schedule, run history, and logs.",
+    desc: "Run all or one store, Neon history, and scrape error alerts.",
     tone: "sky",
     icon: FiClock,
   },
